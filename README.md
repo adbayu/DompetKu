@@ -85,8 +85,3 @@ flutter test
 - Preferensi pengguna disimpan di [lib/services/preferences_service.dart](lib/services/preferences_service.dart) dan di-observe oleh `AppProvider`.
 - Donut chart menggunakan `CustomPainter` di [lib/widgets/finance_donut_chart.dart](lib/widgets/finance_donut_chart.dart) untuk memenuhi requirement custom drawing.
 - Untuk debugging database di web, ikuti instruksi `sqflite_common_ffi_web` pada dokumentasinya.
-
-Jika ingin, saya bisa:
-
-- Menambahkan contoh screenshot atau GIF untuk README.
-- Menyederhanakan instruksi deploy Web atau menambahkan GitHub Actions untuk CI.
