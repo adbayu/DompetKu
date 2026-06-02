@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/category_model.dart';
 import '../providers/app_provider.dart';
 import '../utils/icon_constants.dart';
+import '../utils/localization.dart';
 import '../widgets/app_shell.dart';
 
 class CategoriesScreen extends StatelessWidget {
@@ -12,7 +13,7 @@ class CategoriesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppShell(
-      title: 'Kategori',
+      title: tr(context, 'Kategori', 'Categories'),
       fab: FloatingActionButton(
         onPressed: () => _showCategoryForm(context),
         child: const Icon(Icons.add),
@@ -40,9 +41,15 @@ class CategoriesScreen extends StatelessWidget {
                   onSelected: (v) => v == 'edit'
                       ? _showCategoryForm(context, item)
                       : provider.deleteCategory(item.id!),
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'edit', child: Text('Edit')),
-                    PopupMenuItem(value: 'delete', child: Text('Hapus')),
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Text(tr(context, 'Edit', 'Edit')),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text(tr(context, 'Hapus', 'Delete')),
+                    ),
                   ],
                 ),
               ),
@@ -76,7 +83,11 @@ class CategoriesScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    item == null ? 'Tambah Kategori' : 'Edit Kategori',
+                    tr(
+                      context,
+                      item == null ? 'Tambah Kategori' : 'Edit Kategori',
+                      item == null ? 'Add Category' : 'Edit Category',
+                    ),
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
@@ -84,15 +95,19 @@ class CategoriesScreen extends StatelessWidget {
                   const SizedBox(height: 14),
                   TextFormField(
                     controller: name,
-                    decoration: const InputDecoration(labelText: 'Nama'),
+                    decoration: InputDecoration(
+                      labelText: tr(context, 'Nama', 'Name'),
+                    ),
                     validator: (v) => v == null || v.trim().isEmpty
-                        ? 'Nama wajib diisi'
+                        ? tr(context, 'Nama wajib diisi', 'Name is required')
                         : null,
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: selectedIcon,
-                    decoration: const InputDecoration(labelText: 'Pilih Icon'),
+                    decoration: InputDecoration(
+                      labelText: tr(context, 'Pilih Icon', 'Choose Icon'),
+                    ),
                     items: IconConstants.availableIcons.map((icon) {
                       return DropdownMenuItem<String>(
                         value: icon.name,
@@ -147,7 +162,7 @@ class CategoriesScreen extends StatelessWidget {
                       );
                       if (context.mounted) Navigator.pop(context);
                     },
-                    child: const Text('Simpan'),
+                    child: Text(tr(context, 'Simpan', 'Save')),
                   ),
                 ],
               ),

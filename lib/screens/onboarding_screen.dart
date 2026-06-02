@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/app_provider.dart';
+import '../utils/localization.dart';
 import 'home_screen.dart';
 
 class OnboardingScreen extends StatelessWidget {
@@ -24,14 +25,22 @@ class OnboardingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'Atur uang lebih tenang',
+                tr(
+                  context,
+                  'Atur uang lebih tenang',
+                  'Manage your money with ease',
+                ),
                 style: Theme.of(
                   context,
                 ).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 14),
               Text(
-                'Catat pemasukan, pengeluaran, budget, target tabungan, dan piutang dalam satu aplikasi modern.',
+                tr(
+                  context,
+                  'Catat pemasukan, pengeluaran, budget, target tabungan, dan piutang dalam satu aplikasi modern.',
+                  'Track incomes, expenses, budgets, savings goals, and receivables in one modern app.',
+                ),
               ),
               const Spacer(),
               FilledButton.icon(
@@ -48,7 +57,7 @@ class OnboardingScreen extends StatelessWidget {
                   }
                 },
                 icon: const Icon(Icons.arrow_forward),
-                label: const Text('Mulai Sekarang'),
+                label: Text(tr(context, 'Mulai Sekarang', 'Get Started')),
               ),
             ],
           ),

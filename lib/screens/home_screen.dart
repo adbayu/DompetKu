@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/finance_transaction.dart';
 import '../providers/app_provider.dart';
 import '../utils/formatters.dart';
+import '../utils/localization.dart';
 import '../utils/icon_constants.dart';
 import '../widgets/currency_text.dart';
 import '../widgets/finance_donut_chart.dart';
@@ -46,23 +47,26 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
         onDestinationSelected: (value) => setState(() => index = value),
-        destinations: const [
+        destinations: [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
-            label: 'Home',
+            label: tr(context, 'Beranda', 'Home'),
           ),
           NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined),
             selectedIcon: Icon(Icons.receipt_long),
-            label: 'Transaksi',
+            label: tr(context, 'Transaksi', 'Transactions'),
           ),
           NavigationDestination(
             icon: Icon(Icons.pie_chart_outline),
             selectedIcon: Icon(Icons.pie_chart),
-            label: 'Budget',
+            label: tr(context, 'Budget', 'Budgets'),
           ),
-          NavigationDestination(icon: Icon(Icons.more_horiz), label: 'Lainnya'),
+          NavigationDestination(
+            icon: Icon(Icons.more_horiz),
+            label: tr(context, 'Lainnya', 'More'),
+          ),
         ],
       ),
     );
@@ -109,7 +113,13 @@ class DashboardView extends StatelessWidget {
                             style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.w900),
                           ),
-                          const Text('Kelola keuanganmu dengan bijak!'),
+                          Text(
+                            tr(
+                              context,
+                              'Kelola keuanganmu dengan bijak!',
+                              'Manage your finances wisely!',
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -135,9 +145,9 @@ class DashboardView extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      const Text(
-                        'Total Saldo',
-                        style: TextStyle(color: Colors.white70),
+                      Text(
+                        tr(context, 'Total Saldo', 'Total Balance'),
+                        style: const TextStyle(color: Colors.white70),
                       ),
                       CurrencyText(
                         provider.totalBalance,
@@ -148,18 +158,18 @@ class DashboardView extends StatelessWidget {
                             ),
                       ),
                       const SizedBox(height: 8),
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.account_balance_wallet,
                             color: Colors.white,
                             size: 18,
                           ),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Text(
-                            'Dompet Utama',
-                            style: TextStyle(color: Colors.white),
+                            tr(context, 'Dompet Utama', 'Main Wallet'),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ],
                       ),
@@ -170,14 +180,14 @@ class DashboardView extends StatelessWidget {
                 Row(
                   children: [
                     _MetricCard(
-                      title: 'Pemasukan',
+                      title: tr(context, 'Pemasukan', 'Income'),
                       amount: provider.totalIncome,
                       icon: Icons.trending_up,
                       color: Colors.green,
                     ),
                     const SizedBox(width: 10),
                     _MetricCard(
-                      title: 'Pengeluaran',
+                      title: tr(context, 'Pengeluaran', 'Expense'),
                       amount: provider.totalExpense,
                       icon: Icons.trending_down,
                       color: Colors.red,
@@ -192,7 +202,11 @@ class DashboardView extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Ringkasan Pengeluaran',
+                          tr(
+                            context,
+                            'Ringkasan Pengeluaran',
+                            'Expense Summary',
+                          ),
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w800),
                         ),
@@ -255,7 +269,7 @@ class DashboardView extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'Transaksi Terbaru',
+                        tr(context, 'Transaksi Terbaru', 'Recent Transactions'),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
@@ -267,7 +281,7 @@ class DashboardView extends StatelessWidget {
                           builder: (_) => const TransactionsScreen(),
                         ),
                       ),
-                      child: const Text('Lihat semua'),
+                      child: Text(tr(context, 'Lihat semua', 'View all')),
                     ),
                   ],
                 ),
@@ -323,10 +337,26 @@ class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = [
-      ('Kategori', Icons.category, const CategoriesScreen()),
-      ('Dompet', Icons.account_balance_wallet, const WalletsScreen()),
-      ('Target', Icons.flag, const FinancialGoalsScreen()),
-      ('Utang', Icons.handshake, const DebtsScreen()),
+      {
+        'label': tr(context, 'Kategori', 'Categories'),
+        'icon': Icons.category,
+        'screen': const CategoriesScreen(),
+      },
+      {
+        'label': tr(context, 'Dompet', 'Wallets'),
+        'icon': Icons.account_balance_wallet,
+        'screen': const WalletsScreen(),
+      },
+      {
+        'label': tr(context, 'Target', 'Goals'),
+        'icon': Icons.flag,
+        'screen': const FinancialGoalsScreen(),
+      },
+      {
+        'label': tr(context, 'Utang', 'Debts'),
+        'icon': Icons.handshake,
+        'screen': const DebtsScreen(),
+      },
     ];
     return GridView.count(
       crossAxisCount: 4,
@@ -339,15 +369,21 @@ class _QuickActions extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => item.$3),
+            MaterialPageRoute(builder: (_) => item['screen']),
           ),
           child: Card(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(item.$2, color: Theme.of(context).colorScheme.primary),
+                Icon(
+                  item['icon'],
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(height: 8),
-                Text(item.$1, style: Theme.of(context).textTheme.labelMedium),
+                Text(
+                  item['label'],
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
               ],
             ),
           ),
@@ -402,18 +438,38 @@ class MoreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      ('Kategori', Icons.category, const CategoriesScreen()),
-      ('Dompet / Akun', Icons.account_balance_wallet, const WalletsScreen()),
-      ('Target Finansial', Icons.flag, const FinancialGoalsScreen()),
-      ('Utang & Piutang', Icons.handshake, const DebtsScreen()),
-      ('Pengaturan', Icons.settings, const SettingsScreen()),
+      (
+        tr(context, 'Kategori', 'Categories'),
+        Icons.category,
+        const CategoriesScreen(),
+      ),
+      (
+        tr(context, 'Dompet / Akun', 'Wallets / Accounts'),
+        Icons.account_balance_wallet,
+        const WalletsScreen(),
+      ),
+      (
+        tr(context, 'Target Finansial', 'Financial Goals'),
+        Icons.flag,
+        const FinancialGoalsScreen(),
+      ),
+      (
+        tr(context, 'Utang & Piutang', 'Debts & Credits'),
+        Icons.handshake,
+        const DebtsScreen(),
+      ),
+      (
+        tr(context, 'Pengaturan', 'Settings'),
+        Icons.settings,
+        const SettingsScreen(),
+      ),
     ];
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(18),
         children: [
           Text(
-            'Lainnya',
+            tr(context, 'Lainnya', 'More'),
             style: Theme.of(
               context,
             ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),

@@ -140,7 +140,7 @@ class DatabaseHelper {
       ),
       CategoryModel(
         name: 'Tabungan',
-        icon: 'piggy_bank',
+        icon: 'savings',
         color: Colors.pink.toARGB32(),
       ),
     ];

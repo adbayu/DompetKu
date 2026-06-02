@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/budget_model.dart';
 import '../providers/app_provider.dart';
 import '../utils/formatters.dart';
+import '../utils/localization.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/currency_text.dart';
 
@@ -48,9 +49,9 @@ class BudgetsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Budget Bulanan',
-                    style: TextStyle(
+                  Text(
+                    tr(context, 'Budget Bulanan', 'Monthly Budget'),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
                     ),
@@ -72,19 +73,29 @@ class BudgetsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    '${(ratio * 100).round()}% terpakai',
+                    '${(ratio * 100).round()}% ${tr(context, 'terpakai', 'used')}',
                     style: const TextStyle(color: Colors.white),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            _BudgetSummary(label: 'Total Budget', amount: totalBudget),
-            _BudgetSummary(label: 'Terpakai', amount: spent, danger: true),
-            _BudgetSummary(label: 'Sisa Budget', amount: totalBudget - spent),
+            _BudgetSummary(
+              label: tr(context, 'Total Budget', 'Total Budget'),
+              amount: totalBudget,
+            ),
+            _BudgetSummary(
+              label: tr(context, 'Terpakai', 'Used'),
+              amount: spent,
+              danger: true,
+            ),
+            _BudgetSummary(
+              label: tr(context, 'Sisa Budget', 'Remaining Budget'),
+              amount: totalBudget - spent,
+            ),
             const SizedBox(height: 12),
             Text(
-              'Budget per Kategori',
+              tr(context, 'Budget per Kategori', 'Budget by Category'),
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
@@ -134,9 +145,15 @@ class BudgetsScreen extends StatelessWidget {
                     onSelected: (v) => v == 'edit'
                         ? _showBudgetForm(context, budget)
                         : provider.deleteBudget(budget.id!),
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'edit', child: Text('Edit')),
-                      PopupMenuItem(value: 'delete', child: Text('Hapus')),
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Text(tr(context, 'Edit', 'Edit')),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text(tr(context, 'Hapus', 'Delete')),
+                      ),
                     ],
                   ),
                 ),
@@ -148,7 +165,7 @@ class BudgetsScreen extends StatelessWidget {
     );
     if (!inShell) return SafeArea(child: body);
     return AppShell(
-      title: 'Budget',
+      title: tr(context, 'Budget', 'Budgets'),
       fab: FloatingActionButton(
         onPressed: () => _showBudgetForm(context),
         child: const Icon(Icons.add),
@@ -183,7 +200,11 @@ class BudgetsScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    item == null ? 'Tambah Budget' : 'Edit Budget',
+                    tr(
+                      context,
+                      item == null ? 'Tambah Budget' : 'Edit Budget',
+                      item == null ? 'Add Budget' : 'Edit Budget',
+                    ),
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
@@ -191,7 +212,9 @@ class BudgetsScreen extends StatelessWidget {
                   const SizedBox(height: 14),
                   DropdownButtonFormField<int>(
                     initialValue: categoryId,
-                    decoration: const InputDecoration(labelText: 'Kategori'),
+                    decoration: InputDecoration(
+                      labelText: tr(context, 'Kategori', 'Category'),
+                    ),
                     items: provider.categories
                         .map(
                           (e) => DropdownMenuItem(
@@ -206,11 +229,11 @@ class BudgetsScreen extends StatelessWidget {
                   TextFormField(
                     controller: amount,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Limit Budget',
+                    decoration: InputDecoration(
+                      labelText: tr(context, 'Limit Budget', 'Budget Limit'),
                     ),
                     validator: (v) => double.tryParse(v ?? '') == null
-                        ? 'Nominal tidak valid'
+                        ? tr(context, 'Nominal tidak valid', 'Invalid amount')
                         : null,
                   ),
                   const SizedBox(height: 16),
@@ -231,7 +254,7 @@ class BudgetsScreen extends StatelessWidget {
                       );
                       if (context.mounted) Navigator.pop(context);
                     },
-                    child: const Text('Simpan'),
+                    child: Text(tr(context, 'Simpan', 'Save')),
                   ),
                 ],
               ),

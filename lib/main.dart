@@ -35,7 +35,7 @@ class DompetkuApp extends StatelessWidget {
         builder: (context, provider, _) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            title: 'Dompetku',
+            title: provider.languagePref == 'en' ? 'My Wallet' : 'Dompetku',
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
             themeMode: provider.isDarkMode ? ThemeMode.dark : ThemeMode.light,

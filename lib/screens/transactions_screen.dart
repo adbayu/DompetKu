@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/finance_transaction.dart';
 import '../providers/app_provider.dart';
 import '../utils/formatters.dart';
+import '../utils/localization.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/success_animation_dialog.dart';
@@ -32,10 +33,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             Padding(
               padding: const EdgeInsets.all(16),
               child: SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'all', label: Text('All')),
-                  ButtonSegment(value: 'income', label: Text('Income')),
-                  ButtonSegment(value: 'expense', label: Text('Expense')),
+                segments: [
+                  ButtonSegment(
+                    value: 'all',
+                    label: Text(tr(context, 'Semua', 'All')),
+                  ),
+                  ButtonSegment(
+                    value: 'income',
+                    label: Text(tr(context, 'Pemasukan', 'Income')),
+                  ),
+                  ButtonSegment(
+                    value: 'expense',
+                    label: Text(tr(context, 'Pengeluaran', 'Expense')),
+                  ),
                 ],
                 selected: {filter},
                 onSelectionChanged: (value) =>
@@ -44,9 +54,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             ),
             Expanded(
               child: items.isEmpty
-                  ? const EmptyState(
-                      title: 'Belum ada transaksi',
-                      subtitle: 'Tambahkan pemasukan atau pengeluaran baru.',
+                  ? EmptyState(
+                      title: tr(
+                        context,
+                        'Belum ada transaksi',
+                        'No transactions yet',
+                      ),
+                      subtitle: tr(
+                        context,
+                        'Tambahkan pemasukan atau pengeluaran baru.',
+                        'Add a new income or expense.',
+                      ),
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
@@ -80,7 +98,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
     if (!widget.inShell) return SafeArea(child: body);
     return AppShell(
-      title: 'Transaksi',
+      title: tr(context, 'Transaksi', 'Transactions'),
       fab: FloatingActionButton(
         onPressed: () => Navigator.push(
           context,
@@ -129,7 +147,9 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   @override
   Widget build(BuildContext context) {
     return AppShell(
-      title: widget.transaction == null ? 'Tambah Transaksi' : 'Edit Transaksi',
+      title: widget.transaction == null
+          ? tr(context, 'Tambah Transaksi', 'Add Transaction')
+          : tr(context, 'Edit Transaksi', 'Edit Transaction'),
       child: Consumer<AppProvider>(
         builder: (context, provider, _) {
           categoryId ??= provider.categories.isNotEmpty
@@ -144,9 +164,15 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
               padding: const EdgeInsets.all(18),
               children: [
                 SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'expense', label: Text('Pengeluaran')),
-                    ButtonSegment(value: 'income', label: Text('Pemasukan')),
+                  segments: [
+                    ButtonSegment(
+                      value: 'expense',
+                      label: Text(tr(context, 'Pengeluaran', 'Expense')),
+                    ),
+                    ButtonSegment(
+                      value: 'income',
+                      label: Text(tr(context, 'Pemasukan', 'Income')),
+                    ),
                   ],
                   selected: {type},
                   onSelectionChanged: (v) => setState(() => type = v.first),
@@ -155,21 +181,27 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                 TextFormField(
                   controller: amountCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Jumlah'),
-                  validator: _moneyValidator,
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Jumlah', 'Amount'),
+                  ),
+                  validator: (v) => _moneyValidator(context, v),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: notesCtrl,
-                  decoration: const InputDecoration(labelText: 'Catatan'),
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Catatan', 'Notes'),
+                  ),
                   validator: (v) => v == null || v.trim().isEmpty
-                      ? 'Catatan wajib diisi'
+                      ? tr(context, 'Catatan wajib diisi', 'Notes are required')
                       : null,
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
                   initialValue: categoryId,
-                  decoration: const InputDecoration(labelText: 'Kategori'),
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Kategori', 'Category'),
+                  ),
                   items: provider.categories
                       .map(
                         (e) =>
@@ -182,7 +214,9 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
                   initialValue: walletId,
-                  decoration: const InputDecoration(labelText: 'Dompet'),
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Dompet', 'Wallet'),
+                  ),
                   items: provider.wallets
                       .map(
                         (e) =>
@@ -196,13 +230,19 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                 if (_isTabunganCategory(provider))
                   DropdownButtonFormField<int?>(
                     initialValue: goalId,
-                    decoration: const InputDecoration(
-                      labelText: 'Target Tabungan (Opsional)',
+                    decoration: InputDecoration(
+                      labelText: tr(
+                        context,
+                        'Target Tabungan (Opsional)',
+                        'Savings Target (Optional)',
+                      ),
                     ),
                     items: [
-                      const DropdownMenuItem(
+                      DropdownMenuItem(
                         value: null,
-                        child: Text('Tidak ada target'),
+                        child: Text(
+                          tr(context, 'Tidak ada target', 'No target'),
+                        ),
                       ),
                       ...provider.goals.map(
                         (e) =>
@@ -220,7 +260,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                   tileColor: Theme.of(
                     context,
                   ).colorScheme.surfaceContainerHighest,
-                  title: const Text('Tanggal'),
+                  title: Text(tr(context, 'Tanggal', 'Date')),
                   subtitle: Text('${date.day}/${date.month}/${date.year}'),
                   trailing: const Icon(Icons.calendar_month),
                   onTap: () async {
@@ -252,7 +292,11 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                     if (context.mounted) {
                       await SuccessAnimationDialog.show(
                         context,
-                        'Transaksi berhasil disimpan',
+                        tr(
+                          context,
+                          'Transaksi berhasil disimpan',
+                          'Transaction saved successfully',
+                        ),
                       );
 
                       final currentMonthExpenses = provider.transactions
@@ -266,11 +310,10 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
 
                       if (context.mounted) {
                         if (currentMonthExpenses >= provider.monthlyLimit) {
-                          final isEn = provider.languagePref == 'en';
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                '${isEn ? 'Warning: This month\'s expenses have reached/exceeded the limit!' : 'Peringatan: Pengeluaran bulan ini telah mencapai/melebihi limit!'} (${MoneyFormatter.format(currentMonthExpenses, symbol: provider.currencySymbol, locale: provider.languagePref == 'en' ? 'en_US' : 'id_ID')})',
+                                '${tr(context, 'Peringatan: Pengeluaran bulan ini telah mencapai/melebihi limit!', 'Warning: This month\'s expenses have reached/exceeded the limit!')} (${MoneyFormatter.format(currentMonthExpenses, symbol: provider.currencySymbol, locale: provider.languagePref == 'en' ? 'en_US' : 'id_ID')})',
                               ),
                               backgroundColor: Colors.red,
                             ),
@@ -281,7 +324,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                     }
                   },
                   icon: const Icon(Icons.save),
-                  label: const Text('Simpan'),
+                  label: Text(tr(context, 'Simpan', 'Save')),
                 ),
               ],
             ),
@@ -300,8 +343,9 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   }
 }
 
-String? _moneyValidator(String? v) {
+String? _moneyValidator(BuildContext context, String? v) {
   final value = double.tryParse(v ?? '');
-  if (value == null || value <= 0) return 'Masukkan jumlah valid';
+  if (value == null || value <= 0)
+    return tr(context, 'Masukkan jumlah valid', 'Enter a valid amount');
   return null;
 }

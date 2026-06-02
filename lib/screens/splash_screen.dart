@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/app_provider.dart';
+import '../utils/localization.dart';
 import 'home_screen.dart';
 import 'onboarding_screen.dart';
 
@@ -52,13 +53,19 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 18),
             Text(
-              'Dompetku',
+              tr(context, 'Dompetku', 'My Wallet'),
               style: Theme.of(
                 context,
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 8),
-            const Text('Kelola keuanganmu dengan bijak'),
+            Text(
+              tr(
+                context,
+                'Kelola keuanganmu dengan bijak',
+                'Manage your finances wisely!',
+              ),
+            ),
           ],
         ),
       ),

@@ -6,6 +6,7 @@ import '../providers/app_provider.dart';
 import '../utils/formatters.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/currency_text.dart';
+import '../utils/localization.dart';
 
 class FinancialGoalsScreen extends StatelessWidget {
   const FinancialGoalsScreen({super.key});
@@ -13,7 +14,7 @@ class FinancialGoalsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppShell(
-      title: 'Target Finansial',
+      title: tr(context, 'Target Finansial', 'Financial Goals'),
       fab: FloatingActionButton(
         onPressed: () => _showGoalForm(context),
         child: const Icon(Icons.add),
@@ -45,17 +46,22 @@ class FinancialGoalsScreen extends StatelessWidget {
                           onSelected: (v) => v == 'edit'
                               ? _showGoalForm(context, goal)
                               : provider.deleteGoal(goal.id!),
-                          itemBuilder: (_) => const [
-                            PopupMenuItem(value: 'edit', child: Text('Edit')),
+                          itemBuilder: (_) => [
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Text(tr(context, 'Edit', 'Edit')),
+                            ),
                             PopupMenuItem(
                               value: 'delete',
-                              child: Text('Hapus'),
+                              child: Text(tr(context, 'Hapus', 'Delete')),
                             ),
                           ],
                         ),
                       ],
                     ),
-                    Text('Deadline ${DateFormatter.short(goal.deadline)}'),
+                    Text(
+                      '${tr(context, 'Deadline', 'Deadline')} ${DateFormatter.short(goal.deadline)}',
+                    ),
                     const SizedBox(height: 12),
                     LinearProgressIndicator(
                       value: p,
@@ -113,7 +119,11 @@ class FinancialGoalsScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  item == null ? 'Tambah Target' : 'Edit Target',
+                  tr(
+                    context,
+                    item == null ? 'Tambah Target' : 'Edit Target',
+                    item == null ? 'Add Goal' : 'Edit Goal',
+                  ),
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
@@ -121,24 +131,30 @@ class FinancialGoalsScreen extends StatelessWidget {
                 const SizedBox(height: 14),
                 TextFormField(
                   controller: title,
-                  decoration: const InputDecoration(labelText: 'Judul'),
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Judul', 'Title'),
+                  ),
                   validator: (v) => v == null || v.trim().isEmpty
-                      ? 'Judul wajib diisi'
+                      ? tr(context, 'Judul wajib diisi', 'Title is required')
                       : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: target,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Target'),
-                  validator: _amountValidator,
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Target', 'Target'),
+                  ),
+                  validator: (v) => _amountValidator(context, v),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: current,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Terkumpul'),
-                  validator: _amountValidator,
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Terkumpul', 'Collected'),
+                  ),
+                  validator: (v) => _amountValidator(context, v),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
@@ -148,7 +164,7 @@ class FinancialGoalsScreen extends StatelessWidget {
                   tileColor: Theme.of(
                     context,
                   ).colorScheme.surfaceContainerHighest,
-                  title: const Text('Deadline'),
+                  title: Text(tr(context, 'Deadline', 'Deadline')),
                   subtitle: Text(DateFormatter.short(deadline)),
                   trailing: const Icon(Icons.calendar_month),
                   onTap: () async {
@@ -176,7 +192,7 @@ class FinancialGoalsScreen extends StatelessWidget {
                     );
                     if (context.mounted) Navigator.pop(context);
                   },
-                  child: const Text('Simpan'),
+                  child: Text(tr(context, 'Simpan', 'Save')),
                 ),
               ],
             ),
@@ -187,7 +203,9 @@ class FinancialGoalsScreen extends StatelessWidget {
   }
 }
 
-String? _amountValidator(String? v) {
+String? _amountValidator(BuildContext context, String? v) {
   final parsed = double.tryParse(v ?? '');
-  return parsed == null || parsed < 0 ? 'Nominal tidak valid' : null;
+  return parsed == null || parsed < 0
+      ? tr(context, 'Nominal tidak valid', 'Invalid amount')
+      : null;
 }

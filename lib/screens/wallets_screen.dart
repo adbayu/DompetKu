@@ -5,6 +5,7 @@ import '../models/wallet_model.dart';
 import '../providers/app_provider.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/currency_text.dart';
+import '../utils/localization.dart';
 
 class WalletsScreen extends StatelessWidget {
   const WalletsScreen({super.key});
@@ -12,7 +13,7 @@ class WalletsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppShell(
-      title: 'Dompet',
+      title: tr(context, 'Dompet', 'Wallets'),
       fab: FloatingActionButton(
         onPressed: () => _showWalletForm(context),
         child: const Icon(Icons.add),
@@ -40,7 +41,9 @@ class WalletsScreen extends StatelessWidget {
                           children: [
                             Text(
                               item.name,
-                              style: const TextStyle(fontWeight: FontWeight.w800),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(item.type),
@@ -60,11 +63,14 @@ class WalletsScreen extends StatelessWidget {
                           onSelected: (v) => v == 'edit'
                               ? _showWalletForm(context, item)
                               : provider.deleteWallet(item.id!),
-                          itemBuilder: (_) => const [
-                            PopupMenuItem(value: 'edit', child: Text('Edit')),
+                          itemBuilder: (_) => [
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Text(tr(context, 'Edit', 'Edit')),
+                            ),
                             PopupMenuItem(
                               value: 'delete',
-                              child: Text('Hapus'),
+                              child: Text(tr(context, 'Hapus', 'Delete')),
                             ),
                           ],
                         ),
@@ -104,7 +110,11 @@ class WalletsScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  item == null ? 'Tambah Dompet' : 'Edit Dompet',
+                  tr(
+                    context,
+                    item == null ? 'Tambah Dompet' : 'Edit Dompet',
+                    item == null ? 'Add Wallet' : 'Edit Wallet',
+                  ),
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
@@ -112,23 +122,30 @@ class WalletsScreen extends StatelessWidget {
                 const SizedBox(height: 14),
                 TextFormField(
                   controller: name,
-                  decoration: const InputDecoration(labelText: 'Nama'),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Nama wajib diisi' : null,
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Nama', 'Name'),
+                  ),
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? tr(context, 'Nama wajib diisi', 'Name is required')
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: balance,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Saldo'),
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Saldo', 'Balance'),
+                  ),
                   validator: (v) => double.tryParse(v ?? '') == null
-                      ? 'Saldo tidak valid'
+                      ? tr(context, 'Saldo tidak valid', 'Invalid balance')
                       : null,
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField(
                   initialValue: type,
-                  decoration: const InputDecoration(labelText: 'Tipe'),
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Tipe', 'Type'),
+                  ),
                   items: const [
                     DropdownMenuItem(value: 'cash', child: Text('Cash')),
                     DropdownMenuItem(value: 'bank', child: Text('Bank')),
@@ -150,7 +167,7 @@ class WalletsScreen extends StatelessWidget {
                     );
                     if (context.mounted) Navigator.pop(context);
                   },
-                  child: const Text('Simpan'),
+                  child: Text(tr(context, 'Simpan', 'Save')),
                 ),
               ],
             ),

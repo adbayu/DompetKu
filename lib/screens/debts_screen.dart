@@ -6,6 +6,7 @@ import '../providers/app_provider.dart';
 import '../utils/formatters.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/currency_text.dart';
+import '../utils/localization.dart';
 
 class DebtsScreen extends StatelessWidget {
   const DebtsScreen({super.key});
@@ -13,7 +14,7 @@ class DebtsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppShell(
-      title: 'Utang & Piutang',
+      title: tr(context, 'Utang & Piutang', 'Debts & Credits'),
       fab: FloatingActionButton(
         onPressed: () => _showDebtForm(context),
         child: const Icon(Icons.add),
@@ -43,7 +44,7 @@ class DebtsScreen extends StatelessWidget {
                   ),
                 ),
                 subtitle: Text(
-                  '${isReceivable ? 'Piutang' : 'Utang'} • jatuh tempo ${DateFormatter.short(item.dueDate)} • ${paid ? 'Lunas' : 'Belum lunas'}',
+                  '${isReceivable ? tr(context, 'Piutang', 'Receivable') : tr(context, 'Utang', 'Debt')} • ${tr(context, 'jatuh tempo', 'due')} ${DateFormatter.short(item.dueDate)} • ${paid ? tr(context, 'Lunas', 'Paid') : tr(context, 'Belum lunas', 'Unpaid')}',
                 ),
                 trailing: PopupMenuButton<String>(
                   child: Column(
@@ -62,10 +63,19 @@ class DebtsScreen extends StatelessWidget {
                     if (v == 'paid') provider.markDebtPaid(item);
                     if (v == 'delete') provider.deleteDebt(item.id!);
                   },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'edit', child: Text('Edit')),
-                    PopupMenuItem(value: 'paid', child: Text('Tandai lunas')),
-                    PopupMenuItem(value: 'delete', child: Text('Hapus')),
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Text(tr(context, 'Edit', 'Edit')),
+                    ),
+                    PopupMenuItem(
+                      value: 'paid',
+                      child: Text(tr(context, 'Tandai lunas', 'Mark as paid')),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text(tr(context, 'Hapus', 'Delete')),
+                    ),
                   ],
                 ),
               ),
@@ -100,16 +110,26 @@ class DebtsScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  item == null ? 'Tambah Catatan' : 'Edit Catatan',
+                  tr(
+                    context,
+                    item == null ? 'Tambah Catatan' : 'Edit Catatan',
+                    item == null ? 'Add Note' : 'Edit Note',
+                  ),
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 14),
                 SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'debt', label: Text('Utang')),
-                    ButtonSegment(value: 'receivable', label: Text('Piutang')),
+                  segments: [
+                    ButtonSegment(
+                      value: 'debt',
+                      label: Text(tr(context, 'Utang', 'Debt')),
+                    ),
+                    ButtonSegment(
+                      value: 'receivable',
+                      label: Text(tr(context, 'Piutang', 'Receivable')),
+                    ),
                   ],
                   selected: {type},
                   onSelectionChanged: (v) => setState(() => type = v.first),
@@ -117,17 +137,22 @@ class DebtsScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: name,
-                  decoration: const InputDecoration(labelText: 'Nama orang'),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Nama wajib diisi' : null,
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Nama orang', 'Person name'),
+                  ),
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? tr(context, 'Nama wajib diisi', 'Name is required')
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: amount,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Jumlah'),
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'Jumlah', 'Amount'),
+                  ),
                   validator: (v) => double.tryParse(v ?? '') == null
-                      ? 'Jumlah tidak valid'
+                      ? tr(context, 'Jumlah tidak valid', 'Invalid amount')
                       : null,
                 ),
                 const SizedBox(height: 12),
@@ -138,7 +163,7 @@ class DebtsScreen extends StatelessWidget {
                   tileColor: Theme.of(
                     context,
                   ).colorScheme.surfaceContainerHighest,
-                  title: const Text('Jatuh tempo'),
+                  title: Text(tr(context, 'Jatuh tempo', 'Due date')),
                   subtitle: Text(DateFormatter.short(dueDate)),
                   trailing: const Icon(Icons.calendar_month),
                   onTap: () async {
@@ -167,7 +192,7 @@ class DebtsScreen extends StatelessWidget {
                     );
                     if (context.mounted) Navigator.pop(context);
                   },
-                  child: const Text('Simpan'),
+                  child: Text(tr(context, 'Simpan', 'Save')),
                 ),
               ],
             ),
