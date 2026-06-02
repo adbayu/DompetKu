@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/finance_transaction.dart';
 import '../providers/app_provider.dart';
 import '../utils/formatters.dart';
+import '../utils/icon_constants.dart';
 import '../widgets/currency_text.dart';
 import '../widgets/finance_donut_chart.dart';
 import 'budgets_screen.dart';
@@ -392,15 +393,7 @@ class TransactionTile extends StatelessWidget {
 }
 
 IconData _iconFromName(String name) {
-  return {
-        'restaurant': Icons.restaurant,
-        'directions_bus': Icons.directions_bus,
-        'shopping_cart': Icons.shopping_cart,
-        'local_activity': Icons.local_activity,
-        'work': Icons.work,
-        'more_horiz': Icons.more_horiz,
-      }[name] ??
-      Icons.category;
+  return IconConstants.getIcon(name);
 }
 
 class MoreScreen extends StatelessWidget {
