@@ -369,19 +369,19 @@ class _QuickActions extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => item['screen']),
+            MaterialPageRoute(builder: (_) => item['screen'] as Widget),
           ),
           child: Card(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  item['icon'],
+                  item['icon'] as IconData,
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  item['label'],
+                  item['label'] as String,
                   style: Theme.of(context).textTheme.labelMedium,
                 ),
               ],
@@ -438,31 +438,31 @@ class MoreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      (
-        tr(context, 'Kategori', 'Categories'),
-        Icons.category,
-        const CategoriesScreen(),
-      ),
-      (
-        tr(context, 'Dompet / Akun', 'Wallets / Accounts'),
-        Icons.account_balance_wallet,
-        const WalletsScreen(),
-      ),
-      (
-        tr(context, 'Target Finansial', 'Financial Goals'),
-        Icons.flag,
-        const FinancialGoalsScreen(),
-      ),
-      (
-        tr(context, 'Utang & Piutang', 'Debts & Credits'),
-        Icons.handshake,
-        const DebtsScreen(),
-      ),
-      (
-        tr(context, 'Pengaturan', 'Settings'),
-        Icons.settings,
-        const SettingsScreen(),
-      ),
+      {
+        'label': tr(context, 'Kategori', 'Categories'),
+        'icon': Icons.category,
+        'screen': const CategoriesScreen(),
+      },
+      {
+        'label': tr(context, 'Dompet / Akun', 'Wallets / Accounts'),
+        'icon': Icons.account_balance_wallet,
+        'screen': const WalletsScreen(),
+      },
+      {
+        'label': tr(context, 'Target Finansial', 'Financial Goals'),
+        'icon': Icons.flag,
+        'screen': const FinancialGoalsScreen(),
+      },
+      {
+        'label': tr(context, 'Utang & Piutang', 'Debts & Credits'),
+        'icon': Icons.handshake,
+        'screen': const DebtsScreen(),
+      },
+      {
+        'label': tr(context, 'Pengaturan', 'Settings'),
+        'icon': Icons.settings,
+        'screen': const SettingsScreen(),
+      },
     ];
     return SafeArea(
       child: ListView(
@@ -479,15 +479,15 @@ class MoreScreen extends StatelessWidget {
             (item) => Card(
               margin: const EdgeInsets.only(bottom: 10),
               child: ListTile(
-                leading: Icon(item.$2),
+                leading: Icon(item['icon'] as IconData),
                 title: Text(
-                  item.$1,
+                  item['label'] as String,
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => item.$3),
+                  MaterialPageRoute(builder: (_) => item['screen'] as Widget),
                 ),
               ),
             ),
