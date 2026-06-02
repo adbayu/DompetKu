@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/finance_transaction.dart';
 import '../providers/app_provider.dart';
+import '../utils/formatters.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/success_animation_dialog.dart';
@@ -253,7 +254,25 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                         context,
                         'Transaksi berhasil disimpan',
                       );
-                      if (context.mounted) Navigator.pop(context);
+                      
+                      final currentMonthExpenses = provider.transactions
+                          .where((t) => t.type == 'expense' && t.date.month == DateTime.now().month && t.date.year == DateTime.now().year)
+                          .fold(0.0, (sum, t) => sum + t.amount);
+                      
+                      if (context.mounted) {
+                        if (currentMonthExpenses >= provider.monthlyLimit) {
+                          final isEn = provider.languagePref == 'en';
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${isEn ? 'Warning: This month\'s expenses have reached/exceeded the limit!' : 'Peringatan: Pengeluaran bulan ini telah mencapai/melebihi limit!'} (${MoneyFormatter.format(currentMonthExpenses, symbol: provider.currencySymbol, locale: provider.languagePref == 'en' ? 'en_US' : 'id_ID')})',
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                        Navigator.pop(context);
+                      }
                     }
                   },
                   icon: const Icon(Icons.save),

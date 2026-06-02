@@ -202,8 +202,7 @@ class DashboardView extends StatelessWidget {
                               segments: segments,
                               totalLabel: MoneyFormatter.format(
                                 provider.totalExpense,
-                                symbol: provider.currencySymbol,
-                              ),
+                                symbol: provider.currencySymbol,                                locale: provider.languagePref == 'en' ? 'en_US' : 'id_ID',                              ),
                               size: 168,
                             ),
                             const SizedBox(width: 14),

@@ -13,10 +13,12 @@ class CurrencyText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final symbol = context.watch<AppProvider>().currencySymbol;
+    final provider = context.watch<AppProvider>();
+    final symbol = provider.currencySymbol;
+    final locale = provider.languagePref == 'en' ? 'en_US' : 'id_ID';
     final prefix = sign && amount > 0 ? '+' : '';
     return Text(
-      '$prefix${MoneyFormatter.format(amount, symbol: symbol)}',
+      '$prefix${MoneyFormatter.format(amount, symbol: symbol, locale: locale)}',
       style: style,
     );
   }

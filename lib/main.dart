@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -15,6 +16,7 @@ Future<void> main() async {
     databaseFactory = databaseFactoryFfiWeb;
   }
   await initializeDateFormatting('id_ID');
+  await initializeDateFormatting('en_US');
   final appProvider = AppProvider();
   await appProvider.initialize();
   runApp(DompetkuApp(appProvider: appProvider));
@@ -37,6 +39,16 @@ class DompetkuApp extends StatelessWidget {
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
             themeMode: provider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            locale: Locale(provider.languagePref),
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('id', ''),
+              Locale('en', ''),
+            ],
             home: const SplashScreen(),
           );
         },
