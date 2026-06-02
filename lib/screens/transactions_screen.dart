@@ -32,9 +32,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               padding: const EdgeInsets.all(16),
               child: SegmentedButton<String>(
                 segments: const [
-                  ButtonSegment(value: 'all', label: Text('Semua')),
-                  ButtonSegment(value: 'income', label: Text('Pemasukan')),
-                  ButtonSegment(value: 'expense', label: Text('Pengeluaran')),
+                  ButtonSegment(value: 'all', label: Text('All')),
+                  ButtonSegment(value: 'income', label: Text('Income')),
+                  ButtonSegment(value: 'expense', label: Text('Expense')),
                 ],
                 selected: {filter},
                 onSelectionChanged: (value) =>
@@ -107,6 +107,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   String type = 'expense';
   int? categoryId;
   int? walletId;
+  int? goalId;
   DateTime date = DateTime.now();
 
   @override
@@ -119,6 +120,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
       type = tx.type;
       categoryId = tx.categoryId;
       walletId = tx.walletId;
+      goalId = tx.goalId;
       date = tx.date;
     }
   }
@@ -190,6 +192,26 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                   validator: (v) => v == null ? 'Pilih dompet' : null,
                 ),
                 const SizedBox(height: 12),
+                if (_isTabunganCategory(provider))
+                  DropdownButtonFormField<int?>(
+                    initialValue: goalId,
+                    decoration: const InputDecoration(
+                      labelText: 'Target Tabungan (Opsional)',
+                    ),
+                    items: [
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text('Tidak ada target'),
+                      ),
+                      ...provider.goals.map(
+                        (e) =>
+                            DropdownMenuItem(value: e.id, child: Text(e.title)),
+                      ),
+                    ],
+                    onChanged: (v) => setState(() => goalId = v),
+                  ),
+                if (_isTabunganCategory(provider)) const SizedBox(height: 12),
+                const SizedBox(height: 12),
                 ListTile(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -223,6 +245,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                         type: type,
                         categoryId: categoryId!,
                         walletId: walletId!,
+                        goalId: goalId,
                       ),
                     );
                     if (context.mounted) {
@@ -242,6 +265,14 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
         },
       ),
     );
+  }
+
+  bool _isTabunganCategory(AppProvider provider) {
+    if (categoryId == null) return false;
+    final category = provider.categories
+        .where((c) => c.id == categoryId)
+        .firstOrNull;
+    return category?.name == 'Tabungan';
   }
 }
 

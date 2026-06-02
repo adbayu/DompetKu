@@ -7,6 +7,7 @@ class FinanceTransaction {
     required this.type,
     required this.categoryId,
     required this.walletId,
+    this.goalId,
   });
 
   final int? id;
@@ -16,6 +17,7 @@ class FinanceTransaction {
   final String type;
   final int categoryId;
   final int walletId;
+  final int? goalId;
 
   FinanceTransaction copyWith({
     int? id,
@@ -25,6 +27,7 @@ class FinanceTransaction {
     String? type,
     int? categoryId,
     int? walletId,
+    int? goalId,
   }) {
     return FinanceTransaction(
       id: id ?? this.id,
@@ -34,6 +37,7 @@ class FinanceTransaction {
       type: type ?? this.type,
       categoryId: categoryId ?? this.categoryId,
       walletId: walletId ?? this.walletId,
+      goalId: goalId ?? this.goalId,
     );
   }
 
@@ -45,6 +49,7 @@ class FinanceTransaction {
     'type': type,
     'category_id': categoryId,
     'wallet_id': walletId,
+    'goal_id': goalId,
   };
 
   factory FinanceTransaction.fromMap(Map<String, Object?> map) {
@@ -56,6 +61,7 @@ class FinanceTransaction {
       type: map['type'] as String,
       categoryId: map['category_id'] as int,
       walletId: map['wallet_id'] as int,
+      goalId: map['goal_id'] as int?,
     );
   }
 }

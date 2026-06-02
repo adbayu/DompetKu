@@ -23,30 +23,51 @@ class WalletsScreen extends StatelessWidget {
           children: provider.wallets.map((item) {
             return Card(
               margin: const EdgeInsets.only(bottom: 10),
-              child: ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.account_balance_wallet),
-                ),
-                title: Text(
-                  item.name,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                subtitle: Text(item.type),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    CurrencyText(
-                      item.balance,
-                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    Row(
+                      children: [
+                        const CircleAvatar(
+                          child: Icon(Icons.account_balance_wallet),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              item.name,
+                              style: const TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(item.type),
+                          ],
+                        ),
+                      ],
                     ),
-                    PopupMenuButton<String>(
-                      onSelected: (v) => v == 'edit'
-                          ? _showWalletForm(context, item)
-                          : provider.deleteWallet(item.id!),
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        PopupMenuItem(value: 'delete', child: Text('Hapus')),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CurrencyText(
+                          item.balance,
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                        PopupMenuButton<String>(
+                          onSelected: (v) => v == 'edit'
+                              ? _showWalletForm(context, item)
+                              : provider.deleteWallet(item.id!),
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(value: 'edit', child: Text('Edit')),
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Text('Hapus'),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ],

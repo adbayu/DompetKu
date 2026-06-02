@@ -125,13 +125,77 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> saveTransaction(FinanceTransaction item) async {
+    // Get the Tabungan category id
+    final tabunganCat = categories
+        .where((c) => c.name == 'Tabungan')
+        .firstOrNull;
+    final isTabunganTx = item.categoryId == tabunganCat?.id;
+
+    // If editing an existing transaction
+    if (item.id != null) {
+      // Get old transaction to compare
+      final oldTx = transactions.where((t) => t.id == item.id).firstOrNull;
+
+      // If old transaction had a goal, revert the old amount first
+      if (oldTx != null && oldTx.goalId != null) {
+        final goal = goals.where((g) => g.id == oldTx.goalId).firstOrNull;
+        if (goal != null) {
+          // Determine direction based on old transaction type
+          final direction = oldTx.type == 'expense' ? -1.0 : 1.0;
+          final updatedGoal = goal.copyWith(
+            currentAmount: (goal.currentAmount - (oldTx.amount * direction))
+                .clamp(0, double.infinity),
+          );
+          await _db.update('financial_goals', updatedGoal.toMap(), goal.id!);
+        }
+      }
+    }
+
+    // Save the transaction
     item.id == null
         ? await _db.insert('transactions', item.toMap())
         : await _db.update('transactions', item.toMap(), item.id!);
+
+    // If transaction is for Tabungan and has a goal, update goal amount
+    if (isTabunganTx && item.goalId != null) {
+      // Fetch fresh from DB to get the correct current amount after any previous updates
+      final freshGoals = await _db.getGoals();
+      final goal = freshGoals.where((g) => g.id == item.goalId).firstOrNull;
+      if (goal != null) {
+        // Determine direction based on transaction type
+        // expense (pengeluaran) = menabung = goal naik = add
+        // income (pemasukan) = ambil dari tabungan = goal turun = subtract
+        final direction = item.type == 'expense' ? 1.0 : -1.0;
+        final updatedGoal = goal.copyWith(
+          currentAmount: (goal.currentAmount + (item.amount * direction)).clamp(
+            0,
+            double.infinity,
+          ),
+        );
+        await _db.update('financial_goals', updatedGoal.toMap(), goal.id!);
+      }
+    }
+
     await refreshAll();
   }
 
   Future<void> deleteTransaction(int id) async {
+    // Get transaction to check if it has a goal
+    final tx = transactions.where((t) => t.id == id).firstOrNull;
+
+    if (tx != null && tx.goalId != null) {
+      final goal = goals.where((g) => g.id == tx.goalId).firstOrNull;
+      if (goal != null) {
+        final updatedGoal = goal.copyWith(
+          currentAmount: (goal.currentAmount - tx.amount).clamp(
+            0,
+            double.infinity,
+          ),
+        );
+        await _db.update('financial_goals', updatedGoal.toMap(), goal.id!);
+      }
+    }
+
     await _db.delete('transactions', id);
     await refreshAll();
   }

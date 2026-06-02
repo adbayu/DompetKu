@@ -21,7 +21,12 @@ class DatabaseHelper {
     final path = kIsWeb
         ? 'dompetku.db'
         : '${(await getApplicationDocumentsDirectory()).path}/dompetku.db';
-    _database = await openDatabase(path, version: 1, onCreate: _create);
+    _database = await openDatabase(
+      path,
+      version: 2,
+      onCreate: _create,
+      onUpgrade: _upgrade,
+    );
     return _database!;
   }
 
@@ -51,8 +56,10 @@ class DatabaseHelper {
         type TEXT NOT NULL,
         category_id INTEGER NOT NULL,
         wallet_id INTEGER NOT NULL,
+        goal_id INTEGER,
         FOREIGN KEY(category_id) REFERENCES categories(id),
-        FOREIGN KEY(wallet_id) REFERENCES wallets(id)
+        FOREIGN KEY(wallet_id) REFERENCES wallets(id),
+        FOREIGN KEY(goal_id) REFERENCES financial_goals(id)
       )
     ''');
     await db.execute('''
@@ -87,6 +94,23 @@ class DatabaseHelper {
     await _seed(db);
   }
 
+  Future<void> _upgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add goal_id column to transactions table
+      await db.execute('ALTER TABLE transactions ADD COLUMN goal_id INTEGER');
+
+      // Add Tabungan category if upgrading
+      await db.insert(
+        'categories',
+        CategoryModel(
+          name: 'Tabungan',
+          icon: 'piggy_bank',
+          color: Colors.pink.toARGB32(),
+        ).toMap(),
+      );
+    }
+  }
+
   Future<void> _seed(Database db) async {
     final categories = [
       CategoryModel(
@@ -113,6 +137,11 @@ class DatabaseHelper {
         name: 'Pemasukan',
         icon: 'work',
         color: Colors.teal.toARGB32(),
+      ),
+      CategoryModel(
+        name: 'Tabungan',
+        icon: 'piggy_bank',
+        color: Colors.pink.toARGB32(),
       ),
     ];
     for (final item in categories) {
