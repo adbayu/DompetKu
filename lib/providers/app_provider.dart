@@ -100,7 +100,7 @@ class AppProvider extends ChangeNotifier {
     final oldSymbol = prefs.currencySymbol;
     if (oldSymbol != value) {
       double rate = 1.0;
-      
+
       // Convert to IDR base first
       if (oldSymbol == r'$') {
         rate = 15000.0;
@@ -117,19 +117,37 @@ class AppProvider extends ChangeNotifier {
 
       if (rate != 1.0) {
         for (var w in wallets) {
-          await _db.update('wallets', w.copyWith(balance: w.balance * rate).toMap(), w.id!);
+          await _db.update(
+            'wallets',
+            w.copyWith(balance: w.balance * rate).toMap(),
+            w.id!,
+          );
         }
         for (var t in transactions) {
-          await _db.update('transactions', t.copyWith(amount: t.amount * rate).toMap(), t.id!);
+          await _db.update(
+            'transactions',
+            t.copyWith(amount: t.amount * rate).toMap(),
+            t.id!,
+          );
         }
         for (var b in budgets) {
-          await _db.update('budgets', b.copyWith(limitAmount: b.limitAmount * rate).toMap(), b.id!);
+          await _db.update(
+            'budgets',
+            b.copyWith(limitAmount: b.limitAmount * rate).toMap(),
+            b.id!,
+          );
         }
         for (var g in goals) {
-          await _db.update('financial_goals', g.copyWith(
-            targetAmount: g.targetAmount * rate,
-            currentAmount: g.currentAmount * rate,
-          ).toMap(), g.id!);
+          await _db.update(
+            'financial_goals',
+            g
+                .copyWith(
+                  targetAmount: g.targetAmount * rate,
+                  currentAmount: g.currentAmount * rate,
+                )
+                .toMap(),
+            g.id!,
+          );
         }
         for (var d in debts) {
           await _db.update(
@@ -142,7 +160,7 @@ class AppProvider extends ChangeNotifier {
         await refreshAll();
       }
     }
-    
+
     await prefs.setString('currencySymbol', value);
     notifyListeners();
   }

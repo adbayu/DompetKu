@@ -254,11 +254,16 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                         context,
                         'Transaksi berhasil disimpan',
                       );
-                      
+
                       final currentMonthExpenses = provider.transactions
-                          .where((t) => t.type == 'expense' && t.date.month == DateTime.now().month && t.date.year == DateTime.now().year)
+                          .where(
+                            (t) =>
+                                t.type == 'expense' &&
+                                t.date.month == DateTime.now().month &&
+                                t.date.year == DateTime.now().year,
+                          )
                           .fold(0.0, (sum, t) => sum + t.amount);
-                      
+
                       if (context.mounted) {
                         if (currentMonthExpenses >= provider.monthlyLimit) {
                           final isEn = provider.languagePref == 'en';

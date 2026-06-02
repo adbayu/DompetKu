@@ -45,10 +45,7 @@ class DompetkuApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            supportedLocales: const [
-              Locale('id', ''),
-              Locale('en', ''),
-            ],
+            supportedLocales: const [Locale('id', ''), Locale('en', '')],
             home: const SplashScreen(),
           );
         },
