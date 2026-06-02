@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/category_model.dart';
 import '../providers/app_provider.dart';
+import '../utils/icon_constants.dart';
 import '../widgets/app_shell.dart';
 
 class CategoriesScreen extends StatelessWidget {
@@ -25,13 +26,16 @@ class CategoriesScreen extends StatelessWidget {
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: Color(item.color).withValues(alpha: .16),
-                  child: Icon(Icons.category, color: Color(item.color)),
+                  child: Icon(
+                    IconConstants.getIcon(item.icon),
+                    color: Color(item.color),
+                  ),
                 ),
                 title: Text(
                   item.name,
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
-                subtitle: Text(item.icon),
+                subtitle: Text(IconConstants.getLabel(item.icon)),
                 trailing: PopupMenuButton<String>(
                   onSelected: (v) => v == 'edit'
                       ? _showCategoryForm(context, item)
@@ -51,7 +55,7 @@ class CategoriesScreen extends StatelessWidget {
 
   void _showCategoryForm(BuildContext context, [CategoryModel? item]) {
     final name = TextEditingController(text: item?.name);
-    final icon = TextEditingController(text: item?.icon ?? 'category');
+    String selectedIcon = item?.icon ?? 'restaurant';
     Color color = item == null ? Colors.teal : Color(item.color);
     final formKey = GlobalKey<FormState>();
     showModalBottomSheet(
@@ -86,9 +90,26 @@ class CategoriesScreen extends StatelessWidget {
                         : null,
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
-                    controller: icon,
-                    decoration: const InputDecoration(labelText: 'Icon key'),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedIcon,
+                    decoration: const InputDecoration(labelText: 'Pilih Icon'),
+                    items: IconConstants.availableIcons.map((icon) {
+                      return DropdownMenuItem<String>(
+                        value: icon.name,
+                        child: Row(
+                          children: [
+                            Icon(IconConstants.getIcon(icon.name), size: 24),
+                            const SizedBox(width: 12),
+                            Text(icon.label),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => selectedIcon = value);
+                      }
+                    },
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -120,7 +141,7 @@ class CategoriesScreen extends StatelessWidget {
                         CategoryModel(
                           id: item?.id,
                           name: name.text.trim(),
-                          icon: icon.text.trim(),
+                          icon: selectedIcon,
                           color: color.toARGB32(),
                         ),
                       );
