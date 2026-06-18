@@ -20,6 +20,15 @@ class AppProvider extends ChangeNotifier {
   List<FinancialGoal> goals = [];
   List<DebtModel> debts = [];
   bool loading = true;
+  bool _isLimitAlertDismissed = false;
+
+  bool get isLimitAlertVisible =>
+      totalExpense > monthlyLimit && !_isLimitAlertDismissed;
+
+  void dismissLimitAlert() {
+    _isLimitAlertDismissed = true;
+    notifyListeners();
+  }
 
   bool get isDarkMode => prefs.isDarkMode;
   String get currencySymbol => prefs.currencySymbol;
@@ -39,6 +48,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> initialize() async {
     await prefs.init();
+    await _db.checkAndSeedPastMonths();
     await refreshAll();
   }
 
@@ -90,6 +100,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> setMonthlyLimit(double value) async {
     await prefs.setDouble('monthlyLimit', value);
+    _isLimitAlertDismissed = false;
     notifyListeners();
   }
 
@@ -217,6 +228,7 @@ class AppProvider extends ChangeNotifier {
   double _transactionDelta(FinanceTransaction item) =>
       item.type == 'income' ? item.amount : -item.amount;
   Future<void> saveTransaction(FinanceTransaction item) async {
+    _isLimitAlertDismissed = false;
     // Get the Tabungan category id
     final tabunganCat = categories
         .where((c) => c.name == 'Tabungan')
@@ -282,8 +294,16 @@ class AppProvider extends ChangeNotifier {
   Future<void> deleteTransaction(int id) async {
     // Get transaction to check if it has a goal
     final tx = transactions.where((t) => t.id == id).firstOrNull;
+    if (tx == null) return;
 
-    if (tx != null && tx.goalId != null) {
+    // Remove from in-memory list first and notify listeners immediately.
+    // This prevents the Dismissible duplicate key error since the widget is removed
+    // from the tree before the asynchronous DB work starts.
+    transactions.removeWhere((t) => t.id == id);
+    _isLimitAlertDismissed = false;
+    notifyListeners();
+
+    if (tx.goalId != null) {
       final goal = goals.where((g) => g.id == tx.goalId).firstOrNull;
       if (goal != null) {
         final updatedGoal = goal.copyWith(
@@ -296,12 +316,17 @@ class AppProvider extends ChangeNotifier {
       }
     }
 
-    if (tx != null) {
-      await _adjustWalletBalance(tx.walletId, -_transactionDelta(tx));
-    }
-
+    await _adjustWalletBalance(tx.walletId, -_transactionDelta(tx));
     await _db.delete('transactions', id);
-    await refreshAll();
+    
+    // Refresh all data silently
+    categories = await _db.getCategories();
+    wallets = await _db.getWallets();
+    transactions = await _db.getTransactions();
+    budgets = await _db.getBudgets();
+    goals = await _db.getGoals();
+    debts = await _db.getDebts();
+    notifyListeners();
   }
 
   Future<void> saveBudget(BudgetModel item) async {

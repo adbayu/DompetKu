@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:local_auth/local_auth.dart';
+// import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/app_provider.dart';
 import 'onboarding_screen.dart';
 import '../widgets/app_shell.dart';
-import '../widgets/glass_panel.dart';
 import '../widgets/soft_banking.dart';
 import '../utils/formatters.dart';
 
@@ -20,25 +19,25 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String _t(bool isEn, String id, String en) => isEn ? en : id;
 
-  Future<void> _checkBiometric(bool isEn) async {
-    final auth = LocalAuthentication();
-    final available =
-        await auth.canCheckBiometrics || await auth.isDeviceSupported();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          available
-              ? _t(
-                  isEn,
-                  'Biometric tersedia di perangkat',
-                  'Biometric available on device',
-                )
-              : _t(isEn, 'Biometric tidak tersedia', 'Biometric unavailable'),
-        ),
-      ),
-    );
-  }
+  // Future<void> _checkBiometric(bool isEn) async {
+  //   final auth = LocalAuthentication();
+  //   final available =
+  //       await auth.canCheckBiometrics || await auth.isDeviceSupported();
+  //   if (!mounted) return;
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text(
+  //         available
+  //             ? _t(
+  //                 isEn,
+  //                 'Biometric tersedia di perangkat',
+  //                 'Biometric available on device',
+  //               )
+  //             : _t(isEn, 'Biometric tidak tersedia', 'Biometric unavailable'),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   void _editName(AppProvider provider) {
     final isEn = provider.languagePref == 'en';
@@ -349,6 +348,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: const Icon(Icons.save),
             label: Text(_t(isEn, 'Simpan Perubahan', 'Save Changes')),
           ),
+          const SizedBox(height: 50),
         ],
       ),
     );

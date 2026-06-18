@@ -10,6 +10,7 @@ import '../widgets/app_shell.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/success_animation_dialog.dart';
 import '../widgets/soft_banking.dart';
+import '../widgets/transaction_bar_chart.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key, this.inShell = true});
@@ -42,7 +43,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(18, 22, 18, 110),
             children: [
-              _StatisticsHeader(onDownload: () {}, onCalendar: () async {}),
+               const _StatisticsHeader(),
               const SizedBox(height: 26),
               Row(
                 children: [
@@ -54,6 +55,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       selectedMonth = null;
                     }),
                   ),
+                  const SizedBox(width: 8),
                   _TypePill(
                     label: tr(context, 'Pemasukan', 'Income'),
                     selected: filter == 'income',
@@ -62,12 +64,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       selectedMonth = null;
                     }),
                   ),
-                  const Spacer(),
-                  _PeriodPill(label: tr(context, 'Bulan', 'Month')),
                 ],
               ),
               const SizedBox(height: 22),
-              _TransactionBarChart(
+              TransactionBarChart(
                 transactions: chartSource,
                 currencySymbol: provider.currencySymbol,
                 locale: provider.languagePref == 'en' ? 'en_US' : 'id_ID',
@@ -87,7 +87,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               'Expenses History',
                             ))
                     : '${DateFormatter.monthYear(selectedMonth!)} - ${MoneyFormatter.format(filtered.fold<double>(0, (sum, tx) => sum + tx.amount), symbol: provider.currencySymbol, locale: provider.languagePref == 'en' ? 'en_US' : 'id_ID')}',
-                onTap: () => setState(() => selectedMonth = null),
               ),
               const SizedBox(height: 14),
               if (filtered.isEmpty)
@@ -155,10 +154,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 }
 
 class _StatisticsHeader extends StatelessWidget {
-  const _StatisticsHeader({required this.onDownload, required this.onCalendar});
-
-  final VoidCallback onDownload;
-  final VoidCallback onCalendar;
+  const _StatisticsHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -190,51 +186,11 @@ class _StatisticsHeader extends StatelessWidget {
             ],
           ),
         ),
-        _CircleIconButton(icon: Icons.download_rounded, onTap: onDownload),
-        const SizedBox(width: 10),
-        _CircleIconButton(
-          icon: Icons.calendar_month_rounded,
-          onTap: onCalendar,
-        ),
       ],
     );
   }
 }
 
-class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      customBorder: const CircleBorder(),
-      onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(
-                alpha: Theme.of(context).brightness == Brightness.dark
-                    ? .18
-                    : .04,
-              ),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Icon(icon),
-      ),
-    );
-  }
-}
 
 class _TypePill extends StatelessWidget {
   const _TypePill({
@@ -250,28 +206,28 @@ class _TypePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Expanded(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          height: 42,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: selected ? scheme.surface : scheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: selected ? scheme.primary : Colors.transparent,
-              width: 1.3,
-            ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? scheme.surface : scheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? scheme.primary : Colors.transparent,
+            width: 1.3,
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? scheme.primary : scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w800,
-            ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? scheme.primary : scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
           ),
         ),
       ),
@@ -279,222 +235,13 @@ class _TypePill extends StatelessWidget {
   }
 }
 
-class _PeriodPill extends StatelessWidget {
-  const _PeriodPill({required this.label});
 
-  final String label;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 42,
-      margin: const EdgeInsets.only(left: 14),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Row(
-        children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
-          const SizedBox(width: 4),
-          const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
-        ],
-      ),
-    );
-  }
-}
-
-class _TransactionBarChart extends StatelessWidget {
-  const _TransactionBarChart({
-    required this.transactions,
-    required this.currencySymbol,
-    required this.locale,
-    required this.type,
-    required this.selectedMonth,
-    required this.onMonthSelected,
-  });
-
-  final List<FinanceTransaction> transactions;
-  final String currencySymbol;
-  final String locale;
-  final String type;
-  final DateTime? selectedMonth;
-  final ValueChanged<DateTime> onMonthSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final months = List.generate(
-      7,
-      (i) => DateTime(now.year, now.month - 5 + i),
-    );
-    final values = months.map((month) {
-      return transactions
-          .where(
-            (tx) => tx.date.year == month.year && tx.date.month == month.month,
-          )
-          .fold<double>(0, (sum, tx) => sum + tx.amount);
-    }).toList();
-    final maxValue = values.fold<double>(
-      0,
-      (max, value) => value > max ? value : max,
-    );
-    final selectedIndex = selectedMonth == null
-        ? values.lastIndexWhere((value) => value > 0)
-        : months.indexWhere(
-            (month) =>
-                month.year == selectedMonth!.year &&
-                month.month == selectedMonth!.month,
-          );
-    final activeIndex = selectedIndex == -1 ? months.length - 1 : selectedIndex;
-    final activeValue = values[activeIndex];
-    final chartColor = type == 'income'
-        ? const Color(0xFF16A34A)
-        : const Color(0xFFEF4444);
-
-    return SizedBox(
-      height: 214,
-      child: Column(
-        children: [
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTapDown: (details) {
-                    final slot = constraints.maxWidth / months.length;
-                    final tappedIndex = (details.localPosition.dx / slot)
-                        .floor()
-                        .clamp(0, months.length - 1);
-                    onMonthSelected(months[tappedIndex]);
-                  },
-                  child: CustomPaint(
-                    painter: _BarChartPainter(
-                      values: values,
-                      activeIndex: activeIndex,
-                      maxValue: maxValue <= 0 ? 1 : maxValue,
-                      color: chartColor,
-                    ),
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 20),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: chartColor,
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Text(
-                          MoneyFormatter.format(
-                            activeValue,
-                            symbol: currencySymbol,
-                            locale: locale,
-                          ),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: months.map((month) {
-              final monthIndex = months.indexOf(month);
-              final active = monthIndex == activeIndex;
-              return InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => onMonthSelected(month),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 4,
-                  ),
-                  child: Text(
-                    DateFormatter.monthYear(
-                      month,
-                    ).split(' ').first.substring(0, 3),
-                    style: TextStyle(
-                      color: active
-                          ? Theme.of(context).colorScheme.onSurface
-                          : Theme.of(context).colorScheme.onSurfaceVariant
-                                .withValues(alpha: .62),
-                      fontWeight: active ? FontWeight.w900 : FontWeight.w700,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BarChartPainter extends CustomPainter {
-  const _BarChartPainter({
-    required this.values,
-    required this.activeIndex,
-    required this.maxValue,
-    required this.color,
-  });
-
-  final List<double> values;
-  final int activeIndex;
-  final double maxValue;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (values.isEmpty) return;
-    final slot = size.width / values.length;
-    final base = size.height - 18;
-    final paint = Paint()
-      ..style = PaintingStyle.fill
-      ..strokeCap = StrokeCap.round;
-
-    for (var i = 0; i < values.length; i++) {
-      final normalized = (values[i] / maxValue).clamp(0.08, 1.0);
-      final height = normalized * (size.height * .68);
-      final left = i * slot + slot * .24;
-      final rect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(left, base - height, slot * .52, height),
-        const Radius.circular(18),
-      );
-      paint.color = i == activeIndex
-          ? color.withValues(alpha: .22)
-          : color.withValues(alpha: .08);
-      canvas.drawRRect(rect, paint);
-      if (i == activeIndex) {
-        paint.color = color;
-        canvas.drawCircle(Offset(left + slot * .26, base - height), 8, paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _BarChartPainter oldDelegate) =>
-      oldDelegate.values != values ||
-      oldDelegate.activeIndex != activeIndex ||
-      oldDelegate.maxValue != maxValue ||
-      oldDelegate.color != color;
-}
 
 class _HistoryHeader extends StatelessWidget {
-  const _HistoryHeader({required this.title, required this.onTap});
+  const _HistoryHeader({required this.title});
 
   final String title;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -507,10 +254,6 @@ class _HistoryHeader extends StatelessWidget {
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
-        ),
-        TextButton(
-          onPressed: onTap,
-          child: Text(tr(context, 'Lihat semua', 'See all')),
         ),
       ],
     );
@@ -526,9 +269,11 @@ class _HistoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final category = provider.categoryById(tx.categoryId);
-    final color = tx.type == 'income'
+    final flowColor = tx.type == 'income'
         ? const Color(0xFF16A34A)
         : const Color(0xFFEF4444);
+    final categoryColor = Color(category.color);
+    final categoryBgColor = categoryColor.withValues(alpha: .12);
     final signedAmount = tx.type == 'income' ? tx.amount : -tx.amount;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
@@ -540,8 +285,8 @@ class _HistoryTile extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 23,
-            backgroundColor: color.withValues(alpha: .12),
-            child: Icon(IconConstants.getIcon(category.icon), color: color),
+            backgroundColor: categoryBgColor,
+            child: Icon(IconConstants.getIcon(category.icon), color: categoryColor),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -577,7 +322,7 @@ class _HistoryTile extends StatelessWidget {
                   symbol: provider.currencySymbol,
                   locale: provider.languagePref == 'en' ? 'en_US' : 'id_ID',
                 ),
-                style: TextStyle(color: color, fontWeight: FontWeight.w900),
+                style: TextStyle(color: flowColor, fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 5),
               Text(
@@ -814,26 +559,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                         ),
                       );
 
-                      final currentMonthExpenses = provider.transactions
-                          .where(
-                            (t) =>
-                                t.type == 'expense' &&
-                                t.date.month == DateTime.now().month &&
-                                t.date.year == DateTime.now().year,
-                          )
-                          .fold(0.0, (sum, t) => sum + t.amount);
-
                       if (context.mounted) {
-                        if (currentMonthExpenses >= provider.monthlyLimit) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '${tr(context, 'Peringatan: Pengeluaran bulan ini telah mencapai/melebihi limit!', 'Warning: This month\'s expenses have reached/exceeded the limit!')} (${MoneyFormatter.format(currentMonthExpenses, symbol: provider.currencySymbol, locale: provider.languagePref == 'en' ? 'en_US' : 'id_ID')})',
-                              ),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
                         Navigator.pop(context);
                       }
                     }

@@ -78,7 +78,7 @@ class _DonutPainter extends CustomPainter {
       ..color = const Color(0xFFE5E7EB)
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.round;
+      ..strokeCap = StrokeCap.butt;
     canvas.drawArc(
       rect.deflate(stroke / 2),
       -math.pi / 2,
@@ -91,12 +91,10 @@ class _DonutPainter extends CustomPainter {
     for (final segment in segments) {
       final sweep = (segment.value / total) * math.pi * 2 * progress;
       final paint = Paint()
-        ..shader = SweepGradient(
-          colors: [segment.color.withValues(alpha: .8), segment.color],
-        ).createShader(rect)
+        ..color = segment.color
         ..style = PaintingStyle.stroke
         ..strokeWidth = stroke
-        ..strokeCap = StrokeCap.round;
+        ..strokeCap = StrokeCap.butt;
       canvas.drawArc(
         rect.deflate(stroke / 2),
         start,

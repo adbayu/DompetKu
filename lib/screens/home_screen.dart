@@ -8,7 +8,9 @@ import '../utils/localization.dart';
 import '../utils/icon_constants.dart';
 import '../widgets/currency_text.dart';
 import '../widgets/finance_donut_chart.dart';
-import '../widgets/glass_panel.dart';
+import '../widgets/app_shell.dart';
+import '../widgets/wallet_hero_card.dart';
+import '../widgets/limit_alert_card.dart';
 import 'categories_screen.dart';
 import 'debts_screen.dart';
 import 'financial_goals_screen.dart';
@@ -67,55 +69,47 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ];
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: pages[index],
       extendBody: true,
       floatingActionButton: FloatingActionButton.large(
         onPressed: _openAddTransaction,
-        elevation: 10,
+        elevation: isDark ? 0 : 10,
+        highlightElevation: isDark ? 0 : 12,
         shape: const CircleBorder(),
         child: const Icon(Icons.add_rounded, size: 34),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-        child: BottomAppBar(
-          height: 76,
-          shape: const AutomaticNotchedShape(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(32)),
+      bottomNavigationBar: BottomAppBar(
+        height: 76,
+        color: isDark ? Theme.of(context).colorScheme.surface : Colors.white,
+        elevation: isDark ? 0 : 12,
+        shadowColor: isDark ? Colors.transparent : Colors.black.withValues(alpha: .14),
+        child: Row(
+          children: [
+            _BottomNavButton(
+              item: items[0],
+              selected: index == 0,
+              onTap: () => setState(() => index = 0),
             ),
-            StadiumBorder(),
-          ),
-          notchMargin: 10,
-          color: Theme.of(context).colorScheme.surface,
-          elevation: 12,
-          shadowColor: Colors.black.withValues(alpha: .14),
-          child: Row(
-            children: [
-              _BottomNavButton(
-                item: items[0],
-                selected: index == 0,
-                onTap: () => setState(() => index = 0),
-              ),
-              _BottomNavButton(
-                item: items[1],
-                selected: index == 1,
-                onTap: () => setState(() => index = 1),
-              ),
-              const SizedBox(width: 78),
-              _BottomNavButton(
-                item: items[2],
-                selected: index == 2,
-                onTap: () => setState(() => index = 2),
-              ),
-              _BottomNavButton(
-                item: items[3],
-                selected: index == 3,
-                onTap: () => setState(() => index = 3),
-              ),
-            ],
-          ),
+            _BottomNavButton(
+              item: items[1],
+              selected: index == 1,
+              onTap: () => setState(() => index = 1),
+            ),
+            const SizedBox(width: 78),
+            _BottomNavButton(
+              item: items[2],
+              selected: index == 2,
+              onTap: () => setState(() => index = 2),
+            ),
+            _BottomNavButton(
+              item: items[3],
+              selected: index == 3,
+              onTap: () => setState(() => index = 3),
+            ),
+          ],
         ),
       ),
     );
@@ -194,22 +188,12 @@ class DashboardView extends StatelessWidget {
           expenseByCategory[tx.categoryId] =
               (expenseByCategory[tx.categoryId] ?? 0) + tx.amount;
         }
-        const chartColors = [
-          Color(0xFF2F6CEF),
-          Color(0xFF4C83FF),
-          Color(0xFF7AA2FF),
-          Color(0xFFB9D0FF),
-          Color(0xFF1E40AF),
-        ];
-        var colorIndex = 0;
         final segments = expenseByCategory.entries.map((entry) {
           final category = provider.categoryById(entry.key);
-          final color = chartColors[colorIndex % chartColors.length];
-          colorIndex++;
           return DonutSegment(
             label: category.name,
             value: entry.value,
-            color: color,
+            color: Color(category.color),
           );
         }).toList();
         final recent = provider.transactions.take(4).toList();
@@ -223,7 +207,11 @@ class DashboardView extends StatelessWidget {
               children: [
                 _DashboardHeader(userName: provider.userName),
                 const SizedBox(height: 20),
-                _WalletHeroCard(provider: provider),
+                WalletHeroCard(provider: provider),
+                if (provider.isLimitAlertVisible) ...[
+                  const SizedBox(height: 16),
+                  LimitAlertCard(provider: provider),
+                ],
                 const SizedBox(height: 22),
                 _QuickActions(),
                 const SizedBox(height: 22),
@@ -251,13 +239,6 @@ class DashboardView extends StatelessWidget {
                     'Transaksi Terbaru',
                     'Recent Transactions',
                   ),
-                  action: tr(context, 'Lihat semua', 'See all'),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const TransactionsScreen(),
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 12),
                 if (recent.isEmpty)
@@ -274,14 +255,23 @@ class DashboardView extends StatelessWidget {
                         .toList(),
                   ),
                 const SizedBox(height: 22),
-                GlassPanel(
+                Container(
                   padding: const EdgeInsets.all(16),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      const Color(0xFF3F75F2).withValues(alpha: .10),
-                      Theme.of(context).colorScheme.surface,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF101A2E)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? .18
+                              : .04,
+                        ),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
                     ],
                   ),
                   child: Column(
@@ -359,123 +349,14 @@ class _DashboardHeader extends StatelessWidget {
             ],
           ),
         ),
-        Material(
-          color: Colors.white,
-          elevation: 0,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            ),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(14),
-                  child: Icon(Icons.notifications_none_rounded, size: 28),
-                ),
-                Positioned(
-                  right: 8,
-                  top: 7,
-                  child: Container(
-                    width: 9,
-                    height: 9,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF3F75F2),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ],
     );
   }
 }
 
-class _WalletHeroCard extends StatelessWidget {
-  const _WalletHeroCard({required this.provider});
 
-  final AppProvider provider;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 228,
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(36),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0F3FB9), Color(0xFF1D4ED8), Color(0xFF2563EB)],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2F6CEF).withValues(alpha: .24),
-            blurRadius: 30,
-            offset: const Offset(0, 18),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(child: CustomPaint(painter: _CardPatternPainter())),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Image.asset(
-                    'assets/images/Logo_Dompetku.png',
-                    width: 34,
-                    height: 34,
-                    errorBuilder: (_, _, _) => const Icon(
-                      Icons.account_balance_wallet_rounded,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Center(
-                child: CurrencyText(
-                  provider.totalBalance,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -.7,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              const Spacer(),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      tr(context, 'Saldo DompetKu', 'DompetKu Balance'),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
+
 
 class _QuickActions extends StatelessWidget {
   @override
@@ -625,15 +506,9 @@ class _MetricCard extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    required this.action,
-    required this.onTap,
-  });
+  const _SectionHeader({required this.title});
 
   final String title;
-  final String action;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -647,7 +522,6 @@ class _SectionHeader extends StatelessWidget {
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
         ),
-        TextButton(onPressed: onTap, child: Text(action)),
       ],
     );
   }
@@ -714,20 +588,7 @@ class _SegmentLegend extends StatelessWidget {
   }
 }
 
-class _CardPatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: .10)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(size.width * .2, size.height * .1), 82, paint);
-    canvas.drawCircle(Offset(size.width * .85, size.height * .45), 62, paint);
-    canvas.drawCircle(Offset(size.width * .45, size.height * .92), 104, paint);
-  }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
 class TransactionTile extends StatelessWidget {
   const TransactionTile({super.key, required this.tx});
@@ -738,12 +599,11 @@ class TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final category = provider.categoryById(tx.categoryId);
-    final color = tx.type == 'income'
+    final flowColor = tx.type == 'income'
         ? const Color(0xFF16A34A)
         : const Color(0xFFEF4444);
-    final bgColor = tx.type == 'income'
-        ? const Color(0xFFDCFCE7)
-        : const Color(0xFFFEE2E2);
+    final categoryColor = Color(category.color);
+    final categoryBgColor = categoryColor.withValues(alpha: .12);
     final amount = tx.type == 'income' ? tx.amount : -tx.amount;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -766,8 +626,8 @@ class TransactionTile extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 22,
-            backgroundColor: bgColor,
-            child: Icon(_iconFromName(category.icon), color: color, size: 22),
+            backgroundColor: categoryBgColor,
+            child: Icon(_iconFromName(category.icon), color: categoryColor, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -798,7 +658,7 @@ class TransactionTile extends StatelessWidget {
             amount,
             sign: true,
             style: TextStyle(
-              color: color,
+              color: flowColor,
               fontSize: 12,
               fontWeight: FontWeight.w900,
             ),
@@ -845,35 +705,27 @@ class MoreScreen extends StatelessWidget {
         'screen': const SettingsScreen(),
       },
     ];
-    return SafeArea(
+    return AppShell(
+      title: tr(context, 'Lainnya', 'More'),
       child: ListView(
         padding: const EdgeInsets.all(18),
-        children: [
-          Text(
-            tr(context, 'Lainnya', 'More'),
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 12),
-          ...items.map(
-            (item) => Card(
-              margin: const EdgeInsets.only(bottom: 10),
-              child: ListTile(
-                leading: Icon(item['icon'] as IconData),
-                title: Text(
-                  item['label'] as String,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => item['screen'] as Widget),
-                ),
+        children: items.map(
+          (item) => Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ListTile(
+              leading: Icon(item['icon'] as IconData),
+              title: Text(
+                item['label'] as String,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => item['screen'] as Widget),
               ),
             ),
           ),
-        ],
+        ).toList(),
       ),
     );
   }

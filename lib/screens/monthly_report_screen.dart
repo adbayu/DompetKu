@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/category_model.dart';
 import '../models/finance_transaction.dart';
 import '../providers/app_provider.dart';
-import '../utils/formatters.dart';
 import '../utils/icon_constants.dart';
 import '../utils/localization.dart';
 import '../widgets/currency_text.dart';
@@ -22,8 +22,16 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
   DateTime selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
 
   void _changeMonth(int delta) {
+    final newMonth = DateTime(selectedMonth.year, selectedMonth.month + delta);
+    final now = DateTime.now();
+    final currentMonthStart = DateTime(now.year, now.month);
+    
+    if (newMonth.isAfter(currentMonthStart)) {
+      return;
+    }
+
     setState(() {
-      selectedMonth = DateTime(selectedMonth.year, selectedMonth.month + delta);
+      selectedMonth = newMonth;
     });
   }
 
@@ -104,33 +112,7 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 8),
-              _ReportSectionTitle(
-                title: tr(context, 'Aktivitas Terbaru', 'Recent Activity'),
-              ),
-              const SizedBox(height: 10),
-              if (monthlyTransactions.isEmpty)
-                EmptyState(
-                  title: tr(
-                    context,
-                    'Belum ada transaksi',
-                    'No transactions yet',
-                  ),
-                  subtitle: tr(
-                    context,
-                    'Tambah transaksi untuk melihat laporan bulanan.',
-                    'Add transactions to view a monthly report.',
-                  ),
-                )
-              else
-                ...monthlyTransactions
-                    .take(5)
-                    .map(
-                      (tx) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _ReportTransactionTile(tx: tx),
-                      ),
-                    ),
+
             ],
           ),
         );
@@ -153,21 +135,14 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
     for (final tx in transactions.where((tx) => tx.type == 'expense')) {
       totals[tx.categoryId] = (totals[tx.categoryId] ?? 0) + tx.amount;
     }
-    final palette = [
-      const Color(0xFFEF4444),
-      const Color(0xFFF97316),
-      const Color(0xFF8B5CF6),
-      const Color(0xFF06B6D4),
-      const Color(0xFF22C55E),
-    ];
     final entries = totals.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    return entries.asMap().entries.map((entry) {
-      final category = provider.categoryById(entry.value.key);
+    return entries.map((entry) {
+      final category = provider.categoryById(entry.key);
       return DonutSegment(
         label: category.name,
-        value: entry.value.value,
-        color: palette[entry.key % palette.length],
+        value: entry.value,
+        color: Color(category.color),
       );
     }).toList();
   }
@@ -186,6 +161,9 @@ class _ReportHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final isCurrentOrFuture = month.year > now.year || (month.year == now.year && month.month >= now.month);
+
     return Row(
       children: [
         Expanded(
@@ -218,7 +196,10 @@ class _ReportHeader extends StatelessWidget {
         const SizedBox(width: 8),
         _MonthLabel(month: month),
         const SizedBox(width: 8),
-        _MonthButton(icon: Icons.chevron_right_rounded, onTap: onNext),
+        _MonthButton(
+          icon: Icons.chevron_right_rounded,
+          onTap: isCurrentOrFuture ? null : onNext,
+        ),
       ],
     );
   }
@@ -228,17 +209,27 @@ class _MonthButton extends StatelessWidget {
   const _MonthButton({required this.icon, required this.onTap});
 
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final disabled = onTap == null;
+    final bgColor = isLight ? Colors.white : Theme.of(context).colorScheme.surface;
     return InkWell(
       customBorder: const CircleBorder(),
       onTap: onTap,
       child: CircleAvatar(
         radius: 21,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        child: Icon(icon),
+        backgroundColor: disabled
+            ? bgColor.withValues(alpha: .5)
+            : bgColor,
+        child: Icon(
+          icon,
+          color: disabled
+              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: .3)
+              : Theme.of(context).colorScheme.onSurface,
+        ),
       ),
     );
   }
@@ -251,10 +242,12 @@ class _MonthLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final bgColor = isLight ? Colors.white : Theme.of(context).colorScheme.surface;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: bgColor,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Text(
@@ -386,25 +379,6 @@ class _ExpenseBreakdownCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  tr(context, 'Komposisi Pengeluaran', 'Expense Composition'),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () {},
-                label: Text(tr(context, 'Lihat Detail', 'See Detail')),
-                icon: const Icon(Icons.chevron_right_rounded, size: 18),
-                iconAlignment: IconAlignment.end,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           _StackedExpenseBar(
             segments: visibleSegments,
             totalExpense: totalExpense,
@@ -461,19 +435,22 @@ class _StackedExpenseBar extends StatelessWidget {
         child: Row(
           children: segments.map((segment) {
             final percent = segment.value / totalExpense;
+            final percentage = (percent * 100).round();
             return Expanded(
               flex: (percent * 1000).round().clamp(1, 1000),
               child: Container(
                 alignment: Alignment.center,
                 color: segment.color,
-                child: Text(
-                  '${(percent * 100).round()}%',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+                child: percentage >= 6
+                    ? Text(
+                        '$percentage%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
               ),
             );
           }).toList(),
@@ -494,18 +471,27 @@ class _ExpenseCompositionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
+    final category = provider.categories.firstWhere(
+      (c) => c.name == segment.label,
+      orElse: () => const CategoryModel(name: '', icon: 'category', color: 0xFF9CA3AF),
+    );
     final percent = totalExpense == 0 ? 0.0 : segment.value / totalExpense;
     final percentText = '${(percent * 100).round()}%';
+    final categoryColor = Color(category.color);
+    final categoryBgColor = categoryColor.withValues(alpha: .14);
+    final iconData = IconConstants.getIcon(category.icon);
+
     return Row(
       children: [
         Container(
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: segment.color.withValues(alpha: .14),
+            color: categoryBgColor,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(Icons.category_rounded, size: 18, color: segment.color),
+          child: Icon(iconData, size: 18, color: categoryColor),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -520,13 +506,13 @@ class _ExpenseCompositionRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: segment.color.withValues(alpha: .12),
+            color: categoryBgColor,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Text(
             percentText,
             style: TextStyle(
-              color: segment.color,
+              color: categoryColor,
               fontSize: 11,
               fontWeight: FontWeight.w900,
             ),
@@ -540,7 +526,7 @@ class _ExpenseCompositionRow extends StatelessWidget {
             child: LinearProgressIndicator(
               minHeight: 4,
               value: percent,
-              color: segment.color,
+              color: categoryColor,
               backgroundColor: Theme.of(
                 context,
               ).colorScheme.surfaceContainerHighest,
@@ -596,63 +582,7 @@ class _TopCategoryTile extends StatelessWidget {
   }
 }
 
-class _ReportTransactionTile extends StatelessWidget {
-  const _ReportTransactionTile({required this.tx});
 
-  final FinanceTransaction tx;
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<AppProvider>();
-    final category = provider.categoryById(tx.categoryId);
-    final color = tx.type == 'income'
-        ? const Color(0xFF16A34A)
-        : const Color(0xFFEF4444);
-    final amount = tx.type == 'income' ? tx.amount : -tx.amount;
-    return SoftCard(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: color.withValues(alpha: .12),
-            child: Icon(IconConstants.getIcon(category.icon), color: color),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  tx.notes.isEmpty ? category.name : tx.notes,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${category.name} - ${DateFormatter.short(tx.date)}',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          CurrencyText(
-            amount,
-            sign: true,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _ReportSectionTitle extends StatelessWidget {
   const _ReportSectionTitle({required this.title});

@@ -225,6 +225,9 @@ class DatabaseHelper {
       ).toMap(),
     );
     final now = DateTime.now();
+    final oneMonthAgo = DateTime(now.year, now.month - 1, 15);
+    final twoMonthsAgo = DateTime(now.year, now.month - 2, 15);
+
     final txs = [
       FinanceTransaction(
         amount: 45000,
@@ -273,6 +276,72 @@ class DatabaseHelper {
         type: 'income',
         categoryId: 5,
         walletId: 2,
+      ),
+      // 1 Bulan Lalu
+      FinanceTransaction(
+        amount: 8000000,
+        date: oneMonthAgo,
+        notes: 'Gaji Bulanan',
+        type: 'income',
+        categoryId: 5,
+        walletId: 2,
+      ),
+      FinanceTransaction(
+        amount: 50000,
+        date: oneMonthAgo.subtract(const Duration(days: 1)),
+        notes: 'Makan Siang',
+        type: 'expense',
+        categoryId: 1,
+        walletId: 1,
+      ),
+      FinanceTransaction(
+        amount: 1200000,
+        date: oneMonthAgo.subtract(const Duration(days: 2)),
+        notes: 'Belanja Bulanan',
+        type: 'expense',
+        categoryId: 3,
+        walletId: 2,
+      ),
+      FinanceTransaction(
+        amount: 150000,
+        date: oneMonthAgo.subtract(const Duration(days: 3)),
+        notes: 'Bensin Motor',
+        type: 'expense',
+        categoryId: 2,
+        walletId: 1,
+      ),
+      // 2 Bulan Lalu
+      FinanceTransaction(
+        amount: 8000000,
+        date: twoMonthsAgo,
+        notes: 'Gaji Bulanan',
+        type: 'income',
+        categoryId: 5,
+        walletId: 2,
+      ),
+      FinanceTransaction(
+        amount: 45000,
+        date: twoMonthsAgo.subtract(const Duration(days: 1)),
+        notes: 'Makan Siang',
+        type: 'expense',
+        categoryId: 1,
+        walletId: 1,
+      ),
+      FinanceTransaction(
+        amount: 900000,
+        date: twoMonthsAgo.subtract(const Duration(days: 2)),
+        notes: 'Belanja Bulanan',
+        type: 'expense',
+        categoryId: 3,
+        walletId: 2,
+      ),
+      FinanceTransaction(
+        amount: 200000,
+        date: twoMonthsAgo.subtract(const Duration(days: 3)),
+        notes: 'Tiket Bus',
+        type: 'expense',
+        categoryId: 2,
+        walletId: 1,
       ),
     ];
     for (final item in txs) {
@@ -345,6 +414,113 @@ class DatabaseHelper {
         status: 'unpaid',
       ).toMap(),
     );
+  }
+
+  Future<void> checkAndSeedPastMonths() async {
+    final db = await database;
+    final now = DateTime.now();
+
+    // Check 1 month ago
+    final oneMonth = DateTime(now.year, now.month - 1, 15);
+    final oneMonthStr = "${oneMonth.year}-${oneMonth.month.toString().padLeft(2, '0')}";
+    final countOne = Sqflite.firstIntValue(
+      await db.rawQuery(
+        'SELECT COUNT(*) FROM transactions WHERE date LIKE ?',
+        ['$oneMonthStr%'],
+      ),
+    ) ?? 0;
+
+    if (countOne == 0) {
+      final oneMonthAgo = DateTime(now.year, now.month - 1, 15);
+      final txs = [
+        FinanceTransaction(
+          amount: 8000000,
+          date: oneMonthAgo,
+          notes: 'Gaji Bulanan',
+          type: 'income',
+          categoryId: 5,
+          walletId: 2,
+        ),
+        FinanceTransaction(
+          amount: 50000,
+          date: oneMonthAgo.subtract(const Duration(days: 1)),
+          notes: 'Makan Siang',
+          type: 'expense',
+          categoryId: 1,
+          walletId: 1,
+        ),
+        FinanceTransaction(
+          amount: 1200000,
+          date: oneMonthAgo.subtract(const Duration(days: 2)),
+          notes: 'Belanja Bulanan',
+          type: 'expense',
+          categoryId: 3,
+          walletId: 2,
+        ),
+        FinanceTransaction(
+          amount: 150000,
+          date: oneMonthAgo.subtract(const Duration(days: 3)),
+          notes: 'Bensin Motor',
+          type: 'expense',
+          categoryId: 2,
+          walletId: 1,
+        ),
+      ];
+      for (final tx in txs) {
+        await db.insert('transactions', tx.toMap());
+      }
+    }
+
+    // Check 2 months ago
+    final twoMonths = DateTime(now.year, now.month - 2, 15);
+    final twoMonthsStr = "${twoMonths.year}-${twoMonths.month.toString().padLeft(2, '0')}";
+    final countTwo = Sqflite.firstIntValue(
+      await db.rawQuery(
+        'SELECT COUNT(*) FROM transactions WHERE date LIKE ?',
+        ['$twoMonthsStr%'],
+      ),
+    ) ?? 0;
+
+    if (countTwo == 0) {
+      final twoMonthsAgo = DateTime(now.year, now.month - 2, 15);
+      final txs = [
+        FinanceTransaction(
+          amount: 8000000,
+          date: twoMonthsAgo,
+          notes: 'Gaji Bulanan',
+          type: 'income',
+          categoryId: 5,
+          walletId: 2,
+        ),
+        FinanceTransaction(
+          amount: 45000,
+          date: twoMonthsAgo.subtract(const Duration(days: 1)),
+          notes: 'Makan Siang',
+          type: 'expense',
+          categoryId: 1,
+          walletId: 1,
+        ),
+        FinanceTransaction(
+          amount: 900000,
+          date: twoMonthsAgo.subtract(const Duration(days: 2)),
+          notes: 'Belanja Bulanan',
+          type: 'expense',
+          categoryId: 3,
+          walletId: 2,
+        ),
+        FinanceTransaction(
+          amount: 200000,
+          date: twoMonthsAgo.subtract(const Duration(days: 3)),
+          notes: 'Tiket Bus',
+          type: 'expense',
+          categoryId: 2,
+          walletId: 1,
+        ),
+      ];
+      for (final tx in txs) {
+        await db.insert('transactions', tx.toMap());
+      }
+    }
   }
 
   Future<List<T>> _query<T>(
