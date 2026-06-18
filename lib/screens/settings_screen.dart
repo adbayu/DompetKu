@@ -76,12 +76,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(_t(isEn, 'Mulai ulang onboarding?', 'Restart onboarding?')),
+        title: Text(_t(isEn, 'Keluar?', 'Exit?')),
         content: Text(
           _t(
             isEn,
-            'Kamu akan keluar dari halaman utama dan kembali ke layar onboarding.',
-            'You will leave the main page and return to onboarding.',
+            'Kamu akan keluar dari halaman utama.',
+            'You will leave the main page.',
           ),
         ),
         actions: [
@@ -366,12 +366,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             elevation: 0,
             color: colorScheme.errorContainer.withValues(alpha: .35),
             child: ListTile(
-              leading: Icon(
-                Icons.logout_rounded,
-                color: colorScheme.error,
-              ),
+              leading: Icon(Icons.logout_rounded, color: colorScheme.error),
               title: Text(
-                _t(isEn, 'Keluar & mulai dari onboarding', 'Logout & restart onboarding'),
+                _t(isEn, 'Keluar', 'Logout'),
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
               subtitle: Text(

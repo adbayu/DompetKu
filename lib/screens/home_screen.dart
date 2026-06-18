@@ -9,10 +9,10 @@ import '../utils/icon_constants.dart';
 import '../widgets/currency_text.dart';
 import '../widgets/finance_donut_chart.dart';
 import '../widgets/glass_panel.dart';
-import 'budgets_screen.dart';
 import 'categories_screen.dart';
 import 'debts_screen.dart';
 import 'financial_goals_screen.dart';
+import 'monthly_report_screen.dart';
 import 'settings_screen.dart';
 import 'transactions_screen.dart';
 import 'wallets_screen.dart';
@@ -41,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final pages = [
       const DashboardView(),
       const TransactionsScreen(inShell: false),
-      const BudgetsScreen(inShell: false),
+      const MonthlyReportScreen(),
       const SettingsScreen(),
     ];
     final items = [
