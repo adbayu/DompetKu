@@ -304,63 +304,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          _buildHeader(Icons.security, _t(isEn, 'Keamanan', 'Security')),
-          GlassPanel(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.fingerprint, color: colorScheme.primary),
-                  title: Text(_t(isEn, 'Biometric lock', 'Biometric lock')),
-                  subtitle: Text(
-                    _t(
-                      isEn,
-                      'Cek dukungan sidik jari/face unlock untuk keamanan aplikasi.',
-                      'Check fingerprint/face unlock support for app security.',
-                    ),
-                  ),
-                  trailing: FilledButton(
-                    onPressed: () => _checkBiometric(isEn),
-                    child: Text(_t(isEn, 'Cek', 'Check')),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          _buildHeader(Icons.info_outline, _t(isEn, 'Lainnya', 'Others')),
-          Card(
-            elevation: 0,
-            color: colorScheme.surface,
-            child: ListTile(
-              title: Text(
-                _t(isEn, 'SharedPreferences aktif', 'SharedPreferences active'),
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Text(
-                'isFirstTimeOpen: ${provider.isFirstTimeOpen}',
-                style: const TextStyle(fontSize: 12),
-              ),
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  _t(isEn, 'Aktif', 'Active'),
-                  style: TextStyle(
-                    color: colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
           const SizedBox(height: 12),
           Card(
             elevation: 0,
