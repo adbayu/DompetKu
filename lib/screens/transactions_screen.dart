@@ -8,6 +8,7 @@ import '../utils/localization.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/success_animation_dialog.dart';
+import '../widgets/soft_banking.dart';
 import 'home_screen.dart';
 
 class TransactionsScreen extends StatefulWidget {
@@ -28,10 +29,43 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         final items = provider.transactions
             .where((e) => filter == 'all' || e.type == filter)
             .toList();
+        final income = provider.totalIncome;
+        final expense = provider.totalExpense;
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+              child: SoftHeroCard(
+                title: tr(context, 'Transaksi', 'Transactions'),
+                subtitle: tr(
+                  context,
+                  '${items.length} catatan tersaring',
+                  '${items.length} filtered records',
+                ),
+                icon: Icons.receipt_long,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _MiniTotal(
+                        label: tr(context, 'Masuk', 'In'),
+                        value: income,
+                        color: Colors.green,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _MiniTotal(
+                        label: tr(context, 'Keluar', 'Out'),
+                        value: expense,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: SegmentedButton<String>(
                 segments: [
                   ButtonSegment(
@@ -40,11 +74,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   ),
                   ButtonSegment(
                     value: 'income',
-                    label: Text(tr(context, 'Pemasukan', 'Income')),
+                    label: Text(tr(context, 'Masuk', 'Income')),
                   ),
                   ButtonSegment(
                     value: 'expense',
-                    label: Text(tr(context, 'Pengeluaran', 'Expense')),
+                    label: Text(tr(context, 'Keluar', 'Expense')),
                   ),
                 ],
                 selected: {filter},
@@ -87,7 +121,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   TransactionFormScreen(transaction: items[i]),
                             ),
                           ),
-                          child: TransactionTile(tx: items[i]),
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: TransactionTile(tx: items[i]),
+                          ),
                         ),
                       ),
                     ),
@@ -104,16 +141,66 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           context,
           MaterialPageRoute(builder: (_) => const TransactionFormScreen()),
         ),
-        child: const Icon(Icons.add),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        child: const Icon(Icons.add_rounded),
       ),
       child: body,
     );
   }
 }
 
+class _MiniTotal extends StatelessWidget {
+  const _MiniTotal({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final double value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .16),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            MoneyFormatter.format(
+              value,
+              symbol: context.read<AppProvider>().currencySymbol,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class TransactionFormScreen extends StatefulWidget {
-  const TransactionFormScreen({super.key, this.transaction});
+  const TransactionFormScreen({super.key, this.transaction, this.initialType});
   final FinanceTransaction? transaction;
+  final String? initialType;
 
   @override
   State<TransactionFormScreen> createState() => _TransactionFormScreenState();
@@ -132,6 +219,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   @override
   void initState() {
     super.initState();
+    type = widget.initialType ?? type;
     final tx = widget.transaction;
     if (tx != null) {
       amountCtrl.text = tx.amount.toStringAsFixed(0);
@@ -163,19 +251,35 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
             child: ListView(
               padding: const EdgeInsets.all(18),
               children: [
-                SegmentedButton<String>(
-                  segments: [
-                    ButtonSegment(
-                      value: 'expense',
-                      label: Text(tr(context, 'Pengeluaran', 'Expense')),
-                    ),
-                    ButtonSegment(
-                      value: 'income',
-                      label: Text(tr(context, 'Pemasukan', 'Income')),
-                    ),
-                  ],
-                  selected: {type},
-                  onSelectionChanged: (v) => setState(() => type = v.first),
+                SoftHeroCard(
+                  title: widget.transaction == null
+                      ? tr(context, 'Transaksi Baru', 'New Transaction')
+                      : tr(context, 'Edit Transaksi', 'Edit Transaction'),
+                  subtitle: tr(
+                    context,
+                    'Catat uang masuk dan keluar dengan rapi.',
+                    'Track money in and out neatly.',
+                  ),
+                  icon: type == 'income'
+                      ? Icons.trending_up
+                      : Icons.trending_down,
+                ),
+                const SizedBox(height: 16),
+                SoftCard(
+                  child: SegmentedButton<String>(
+                    segments: [
+                      ButtonSegment(
+                        value: 'expense',
+                        label: Text(tr(context, 'Pengeluaran', 'Expense')),
+                      ),
+                      ButtonSegment(
+                        value: 'income',
+                        label: Text(tr(context, 'Pemasukan', 'Income')),
+                      ),
+                    ],
+                    selected: {type},
+                    onSelectionChanged: (v) => setState(() => type = v.first),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 TextFormField(
@@ -345,7 +449,8 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
 
 String? _moneyValidator(BuildContext context, String? v) {
   final value = double.tryParse(v ?? '');
-  if (value == null || value <= 0)
+  if (value == null || value <= 0) {
     return tr(context, 'Masukkan jumlah valid', 'Enter a valid amount');
+  }
   return null;
 }

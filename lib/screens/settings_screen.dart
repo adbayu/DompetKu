@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/app_provider.dart';
+import 'onboarding_screen.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/glass_panel.dart';
+import '../widgets/soft_banking.dart';
 import '../utils/formatters.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.inShell = true});
+  final bool inShell;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -14,6 +19,26 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _t(bool isEn, String id, String en) => isEn ? en : id;
+
+  Future<void> _checkBiometric(bool isEn) async {
+    final auth = LocalAuthentication();
+    final available =
+        await auth.canCheckBiometrics || await auth.isDeviceSupported();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          available
+              ? _t(
+                  isEn,
+                  'Biometric tersedia di perangkat',
+                  'Biometric available on device',
+                )
+              : _t(isEn, 'Biometric tidak tersedia', 'Biometric unavailable'),
+        ),
+      ),
+    );
+  }
 
   void _editName(AppProvider provider) {
     final isEn = provider.languagePref == 'en';
@@ -43,6 +68,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _restartOnboarding(AppProvider provider) async {
+    final isEn = provider.languagePref == 'en';
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_t(isEn, 'Mulai ulang onboarding?', 'Restart onboarding?')),
+        content: Text(
+          _t(
+            isEn,
+            'Kamu akan keluar dari halaman utama dan kembali ke layar onboarding.',
+            'You will leave the main page and return to onboarding.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(_t(isEn, 'Batal', 'Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(_t(isEn, 'Mulai Lagi', 'Restart')),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    await provider.restartOnboarding();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+      (_) => false,
     );
   }
 
@@ -112,60 +171,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // User Card
-          Card(
-            elevation: 0,
-            color: colorScheme.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: colorScheme.outlineVariant),
+          SoftHeroCard(
+            title: provider.userName,
+            subtitle: _t(
+              isEn,
+              'Profil, keamanan, preferensi, dan info aplikasi.',
+              'Profile, security, preferences, and app info.',
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: colorScheme.primaryContainer,
-                    child: Icon(
-                      Icons.person_outline,
-                      color: colorScheme.onPrimaryContainer,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _t(isEn, 'Nama pengguna', 'Username'),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                        Text(
-                          provider.userName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: colorScheme.primaryContainer,
-                      side: BorderSide(color: colorScheme.outlineVariant),
-                      foregroundColor: colorScheme.onPrimaryContainer,
-                    ),
-                    onPressed: () => _editName(provider),
-                    icon: const Icon(Icons.edit, size: 16),
-                    label: Text(_t(isEn, 'Ubah', 'Edit')),
-                  ),
-                ],
-              ),
+            icon: Icons.person_outline,
+            trailing: IconButton.filledTonal(
+              onPressed: () => _editName(provider),
+              icon: const Icon(Icons.edit_outlined),
             ),
           ),
 
@@ -173,13 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Icons.light_mode_outlined,
             _t(isEn, 'Tampilan', 'Display'),
           ),
-          Card(
-            elevation: 0,
-            color: colorScheme.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: colorScheme.outlineVariant),
-            ),
+          SoftCard(
             child: ListTile(
               title: Text(
                 _t(isEn, 'Mode Gelap', 'Dark Mode'),
@@ -200,13 +210,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Icons.account_balance_wallet_outlined,
             _t(isEn, 'Keuangan', 'Finance'),
           ),
-          Card(
-            elevation: 0,
-            color: colorScheme.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: colorScheme.outlineVariant),
-            ),
+          SoftCard(
             child: ListTile(
               title: Text(
                 _t(isEn, 'Limit pengeluaran bulanan', 'Monthly expense limit'),
@@ -250,13 +254,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           _buildHeader(Icons.language, _t(isEn, 'Preferensi', 'Preferences')),
-          Card(
-            elevation: 0,
-            color: colorScheme.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: colorScheme.outlineVariant),
-            ),
+          SoftCard(
             child: Column(
               children: [
                 ListTile(
@@ -306,14 +304,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
+          _buildHeader(Icons.security, _t(isEn, 'Keamanan', 'Security')),
+          GlassPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.fingerprint, color: colorScheme.primary),
+                  title: Text(_t(isEn, 'Biometric lock', 'Biometric lock')),
+                  subtitle: Text(
+                    _t(
+                      isEn,
+                      'Cek dukungan sidik jari/face unlock untuk keamanan aplikasi.',
+                      'Check fingerprint/face unlock support for app security.',
+                    ),
+                  ),
+                  trailing: FilledButton(
+                    onPressed: () => _checkBiometric(isEn),
+                    child: Text(_t(isEn, 'Cek', 'Check')),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           _buildHeader(Icons.info_outline, _t(isEn, 'Lainnya', 'Others')),
           Card(
             elevation: 0,
             color: colorScheme.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: colorScheme.outlineVariant),
-            ),
             child: ListTile(
               title: Text(
                 _t(isEn, 'SharedPreferences aktif', 'SharedPreferences active'),
@@ -342,13 +361,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
-
+          const SizedBox(height: 12),
+          Card(
+            elevation: 0,
+            color: colorScheme.errorContainer.withValues(alpha: .35),
+            child: ListTile(
+              leading: Icon(
+                Icons.logout_rounded,
+                color: colorScheme.error,
+              ),
+              title: Text(
+                _t(isEn, 'Keluar & mulai dari onboarding', 'Logout & restart onboarding'),
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: Text(
+                _t(
+                  isEn,
+                  'Reset status onboarding, lalu kembali ke halaman awal.',
+                  'Reset onboarding status, then return to the welcome page.',
+                ),
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => _restartOnboarding(provider),
+            ),
+          ),
           const SizedBox(height: 32),
           FilledButton.icon(
             style: FilledButton.styleFrom(
-              padding: const EdgeInsets.all(16),
+              minimumSize: const Size.fromHeight(56),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(18),
               ),
             ),
             onPressed: () {

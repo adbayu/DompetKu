@@ -73,6 +73,11 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> restartOnboarding() async {
+    await prefs.setBool('isFirstTimeOpen', true);
+    notifyListeners();
+  }
+
   Future<void> setDarkMode(bool value) async {
     await prefs.setBool('isDarkMode', value);
     notifyListeners();
@@ -194,6 +199,23 @@ class AppProvider extends ChangeNotifier {
     await refreshAll();
   }
 
+
+  Future<void> _adjustWalletBalance(int walletId, double delta) async {
+    final wallet = wallets.where((w) => w.id == walletId).firstOrNull;
+    if (wallet == null || wallet.id == null) return;
+    await _db.update(
+      'wallets',
+      wallet.copyWith(balance: wallet.balance + delta).toMap(),
+      wallet.id!,
+    );
+    final index = wallets.indexWhere((w) => w.id == walletId);
+    if (index != -1) {
+      wallets[index] = wallet.copyWith(balance: wallet.balance + delta);
+    }
+  }
+
+  double _transactionDelta(FinanceTransaction item) =>
+      item.type == 'income' ? item.amount : -item.amount;
   Future<void> saveTransaction(FinanceTransaction item) async {
     // Get the Tabungan category id
     final tabunganCat = categories
@@ -220,6 +242,14 @@ class AppProvider extends ChangeNotifier {
         }
       }
     }
+
+    final oldTx = item.id == null
+        ? null
+        : transactions.where((t) => t.id == item.id).firstOrNull;
+    if (oldTx != null) {
+      await _adjustWalletBalance(oldTx.walletId, -_transactionDelta(oldTx));
+    }
+    await _adjustWalletBalance(item.walletId, _transactionDelta(item));
 
     // Save the transaction
     item.id == null
@@ -264,6 +294,10 @@ class AppProvider extends ChangeNotifier {
         );
         await _db.update('financial_goals', updatedGoal.toMap(), goal.id!);
       }
+    }
+
+    if (tx != null) {
+      await _adjustWalletBalance(tx.walletId, -_transactionDelta(tx));
     }
 
     await _db.delete('transactions', id);
