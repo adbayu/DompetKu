@@ -78,40 +78,43 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(18, 0, 18, 14),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(32),
-          child: BottomAppBar(
-            height: 76,
-            shape: const CircularNotchedRectangle(),
-            notchMargin: 9,
-            color: Theme.of(context).colorScheme.surface,
-            elevation: 0,
-            child: Row(
-              children: [
-                _BottomNavButton(
-                  item: items[0],
-                  selected: index == 0,
-                  onTap: () => setState(() => index = 0),
-                ),
-                _BottomNavButton(
-                  item: items[1],
-                  selected: index == 1,
-                  onTap: () => setState(() => index = 1),
-                ),
-                const SizedBox(width: 74),
-                _BottomNavButton(
-                  item: items[2],
-                  selected: index == 2,
-                  onTap: () => setState(() => index = 2),
-                ),
-                _BottomNavButton(
-                  item: items[3],
-                  selected: index == 3,
-                  onTap: () => setState(() => index = 3),
-                ),
-              ],
+        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+        child: BottomAppBar(
+          height: 76,
+          shape: const AutomaticNotchedShape(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(32)),
             ),
+            StadiumBorder(),
+          ),
+          notchMargin: 10,
+          color: Theme.of(context).colorScheme.surface,
+          elevation: 12,
+          shadowColor: Colors.black.withValues(alpha: .14),
+          child: Row(
+            children: [
+              _BottomNavButton(
+                item: items[0],
+                selected: index == 0,
+                onTap: () => setState(() => index = 0),
+              ),
+              _BottomNavButton(
+                item: items[1],
+                selected: index == 1,
+                onTap: () => setState(() => index = 1),
+              ),
+              const SizedBox(width: 78),
+              _BottomNavButton(
+                item: items[2],
+                selected: index == 2,
+                onTap: () => setState(() => index = 2),
+              ),
+              _BottomNavButton(
+                item: items[3],
+                selected: index == 3,
+                onTap: () => setState(() => index = 3),
+              ),
+            ],
           ),
         ),
       ),
@@ -154,7 +157,11 @@ class _BottomNavButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(selected ? item.activeIcon : item.icon, color: color, size: 24),
+            Icon(
+              selected ? item.activeIcon : item.icon,
+              color: color,
+              size: 24,
+            ),
             const SizedBox(height: 4),
             Text(
               item.label,
@@ -172,6 +179,7 @@ class _BottomNavButton extends StatelessWidget {
     );
   }
 }
+
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
 
@@ -180,7 +188,9 @@ class DashboardView extends StatelessWidget {
     return Consumer<AppProvider>(
       builder: (context, provider, _) {
         final expenseByCategory = <int, double>{};
-        for (final tx in provider.transactions.where((e) => e.type == 'expense')) {
+        for (final tx in provider.transactions.where(
+          (e) => e.type == 'expense',
+        )) {
           expenseByCategory[tx.categoryId] =
               (expenseByCategory[tx.categoryId] ?? 0) + tx.amount;
         }
@@ -236,11 +246,17 @@ class DashboardView extends StatelessWidget {
                 ),
                 const SizedBox(height: 22),
                 _SectionHeader(
-                  title: tr(context, 'Transaksi Terbaru', 'Recent Transactions'),
+                  title: tr(
+                    context,
+                    'Transaksi Terbaru',
+                    'Recent Transactions',
+                  ),
                   action: tr(context, 'Lihat semua', 'See all'),
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const TransactionsScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const TransactionsScreen(),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -284,12 +300,19 @@ class DashboardView extends StatelessWidget {
                             totalLabel: MoneyFormatter.format(
                               provider.totalExpense,
                               symbol: provider.currencySymbol,
-                              locale: provider.languagePref == 'en' ? 'en_US' : 'id_ID',
+                              locale: provider.languagePref == 'en'
+                                  ? 'en_US'
+                                  : 'id_ID',
                             ),
                             size: 150,
                           ),
                           const SizedBox(width: 14),
-                          Expanded(child: _SegmentLegend(segments: segments, total: provider.totalExpense)),
+                          Expanded(
+                            child: _SegmentLegend(
+                              segments: segments,
+                              total: provider.totalExpense,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -320,18 +343,18 @@ class _DashboardHeader extends StatelessWidget {
               Text(
                 tr(context, 'Selamat Datang', 'Welcome Back'),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               Text(
                 userName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -.6,
-                    ),
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -.6,
+                ),
               ),
             ],
           ),
@@ -417,15 +440,6 @@ class _WalletHeroCard extends StatelessWidget {
                       size: 28,
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    '.... ${provider.wallets.isEmpty ? '0000' : provider.wallets.length.toString().padLeft(4, '0')}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 2,
-                    ),
-                  ),
                 ],
               ),
               const Spacer(),
@@ -433,10 +447,10 @@ class _WalletHeroCard extends StatelessWidget {
                 child: CurrencyText(
                   provider.totalBalance,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -.7,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -.7,
+                  ),
                 ),
               ),
               const SizedBox(height: 18),
@@ -451,13 +465,6 @@ class _WalletHeroCard extends StatelessWidget {
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                       ),
-                    ),
-                  ),
-                  Text(
-                    tr(context, 'Aman', 'Secure'),
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: .78),
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -512,11 +519,18 @@ class _QuickActions extends StatelessWidget {
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? .18 : .04),
+                          color: Colors.black.withValues(
+                            alpha:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? .18
+                                : .04,
+                          ),
                           blurRadius: 24,
                           offset: const Offset(0, 12),
                         ),
@@ -547,7 +561,11 @@ class _QuickActions extends StatelessWidget {
 }
 
 class _QuickAction {
-  const _QuickAction({required this.label, required this.icon, required this.screen});
+  const _QuickAction({
+    required this.label,
+    required this.icon,
+    required this.screen,
+  });
   final String label;
   final IconData icon;
   final Widget screen;
@@ -575,7 +593,11 @@ class _MetricCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(26),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? .18 : .035),
+              color: Colors.black.withValues(
+                alpha: Theme.of(context).brightness == Brightness.dark
+                    ? .18
+                    : .035,
+              ),
               blurRadius: 24,
               offset: const Offset(0, 12),
             ),
@@ -603,7 +625,11 @@ class _MetricCard extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.action, required this.onTap});
+  const _SectionHeader({
+    required this.title,
+    required this.action,
+    required this.onTap,
+  });
 
   final String title;
   final String action;
@@ -616,7 +642,9 @@ class _SectionHeader extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
         ),
         TextButton(onPressed: onTap, child: Text(action)),
@@ -634,11 +662,18 @@ class _EmptyRecentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+      ),
       child: Text(
-        isEn ? 'No transactions yet. Add your first transaction.' : 'Belum ada transaksi. Tambahkan transaksi pertama.',
+        isEn
+            ? 'No transactions yet. Add your first transaction.'
+            : 'Belum ada transaksi. Tambahkan transaksi pertama.',
         textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -655,7 +690,9 @@ class _SegmentLegend extends StatelessWidget {
     if (segments.isEmpty) {
       return Text(
         tr(context, 'Belum ada pengeluaran', 'No expenses yet'),
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
       );
     }
     return Column(
@@ -691,6 +728,7 @@ class _CardPatternPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
 class TransactionTile extends StatelessWidget {
   const TransactionTile({super.key, required this.tx});
 
@@ -714,7 +752,11 @@ class TransactionTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? .18 : .035),
+            color: Colors.black.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark
+                  ? .18
+                  : .035,
+            ),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -745,8 +787,8 @@ class TransactionTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -766,6 +808,7 @@ class TransactionTile extends StatelessWidget {
     );
   }
 }
+
 IconData _iconFromName(String name) {
   return IconConstants.getIcon(name);
 }

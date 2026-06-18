@@ -36,7 +36,9 @@ class CategoriesScreen extends StatelessWidget {
                   item.name,
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
-                subtitle: Text(IconConstants.getLabel(item.icon)),
+                subtitle: Text(
+                  ' • ',
+                ),
                 trailing: PopupMenuButton<String>(
                   onSelected: (v) => v == 'edit'
                       ? _showCategoryForm(context, item)
@@ -63,6 +65,7 @@ class CategoriesScreen extends StatelessWidget {
   void _showCategoryForm(BuildContext context, [CategoryModel? item]) {
     final name = TextEditingController(text: item?.name);
     String selectedIcon = item?.icon ?? 'restaurant';
+    String selectedType = item?.type ?? 'expense';
     Color color = item == null ? Colors.teal : Color(item.color);
     final formKey = GlobalKey<FormState>();
     showModalBottomSheet(
@@ -101,6 +104,22 @@ class CategoriesScreen extends StatelessWidget {
                     validator: (v) => v == null || v.trim().isEmpty
                         ? tr(context, 'Nama wajib diisi', 'Name is required')
                         : null,
+                  ),
+                  const SizedBox(height: 12),
+                  SegmentedButton<String>(
+                    segments: [
+                      ButtonSegment(
+                        value: 'expense',
+                        label: Text(tr(context, 'Pengeluaran', 'Expense')),
+                      ),
+                      ButtonSegment(
+                        value: 'income',
+                        label: Text(tr(context, 'Pemasukan', 'Income')),
+                      ),
+                    ],
+                    selected: {selectedType},
+                    onSelectionChanged: (value) =>
+                        setState(() => selectedType = value.first),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
@@ -158,6 +177,7 @@ class CategoriesScreen extends StatelessWidget {
                           name: name.text.trim(),
                           icon: selectedIcon,
                           color: color.toARGB32(),
+                          type: selectedType,
                         ),
                       );
                       if (context.mounted) Navigator.pop(context);

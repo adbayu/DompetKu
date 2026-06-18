@@ -23,7 +23,7 @@ class DatabaseHelper {
         : '${(await getApplicationDocumentsDirectory()).path}/dompetku.db';
     _database = await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _create,
       onUpgrade: _upgrade,
     );
@@ -36,7 +36,8 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         icon TEXT NOT NULL,
-        color INTEGER NOT NULL
+        color INTEGER NOT NULL,
+        type TEXT NOT NULL DEFAULT 'expense'
       )
     ''');
     await db.execute('''
@@ -95,51 +96,111 @@ class DatabaseHelper {
   }
 
   Future<void> _upgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // Add goal_id column to transactions table
-      await db.execute('ALTER TABLE transactions ADD COLUMN goal_id INTEGER');
+    if (oldVersion < 3) {
+      await db.execute(
+        "ALTER TABLE categories ADD COLUMN type TEXT NOT NULL DEFAULT 'expense'",
+      );
+      await db.update(
+        'categories',
+        {'type': 'income', 'name': 'Gaji'},
+        where: 'name = ?',
+        whereArgs: ['Pemasukan'],
+      );
+    }
 
-      // Add Tabungan category if upgrading
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE transactions ADD COLUMN goal_id INTEGER');
       await db.insert(
         'categories',
         CategoryModel(
           name: 'Tabungan',
+          type: 'expense',
           icon: 'piggy_bank',
           color: Colors.pink.toARGB32(),
         ).toMap(),
       );
     }
-  }
 
+    if (oldVersion < 3) {
+      final incomeCategories = [
+        CategoryModel(
+          name: 'Gaji',
+          type: 'income',
+          icon: 'work',
+          color: Colors.teal.toARGB32(),
+        ),
+        CategoryModel(
+          name: 'Bonus',
+          type: 'income',
+          icon: 'payments',
+          color: Colors.green.toARGB32(),
+        ),
+        CategoryModel(
+          name: 'Hadiah',
+          type: 'income',
+          icon: 'redeem',
+          color: Colors.purple.toARGB32(),
+        ),
+        CategoryModel(
+          name: 'Investasi',
+          type: 'income',
+          icon: 'trending_up',
+          color: Colors.blue.toARGB32(),
+        ),
+        CategoryModel(
+          name: 'Lainnya Masuk',
+          type: 'income',
+          icon: 'add_circle',
+          color: Colors.cyan.toARGB32(),
+        ),
+      ];
+      for (final item in incomeCategories) {
+        final exists = Sqflite.firstIntValue(
+              await db.rawQuery(
+                'SELECT COUNT(*) FROM categories WHERE name = ? AND type = ?',
+                [item.name, item.type],
+              ),
+            ) ??
+            0;
+        if (exists == 0) await db.insert('categories', item.toMap());
+      }
+    }
+  }
   Future<void> _seed(Database db) async {
     final categories = [
       CategoryModel(
         name: 'Makanan',
+        type: 'expense',
         icon: 'restaurant',
         color: Colors.green.toARGB32(),
       ),
       CategoryModel(
         name: 'Transportasi',
+        type: 'expense',
         icon: 'directions_bus',
         color: Colors.blue.toARGB32(),
       ),
       CategoryModel(
         name: 'Belanja',
+        type: 'expense',
         icon: 'shopping_cart',
         color: Colors.orange.toARGB32(),
       ),
       CategoryModel(
         name: 'Hiburan',
+        type: 'expense',
         icon: 'local_activity',
         color: Colors.purple.toARGB32(),
       ),
       CategoryModel(
-        name: 'Pemasukan',
+        name: 'Gaji',
+        type: 'income',
         icon: 'work',
         color: Colors.teal.toARGB32(),
       ),
       CategoryModel(
         name: 'Tabungan',
+        type: 'expense',
         icon: 'savings',
         color: Colors.pink.toARGB32(),
       ),
